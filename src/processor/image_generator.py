@@ -32,7 +32,7 @@ class ImageGenerator:
             # Gemini 2.0 Flash로 이미지 생성 요청
             response = self.client.models.generate_content(
                 model="gemini-2.0-flash-exp",
-                contents=f"Generate a simple, professional illustration for: {prompt}",
+                contents=f"Generate a clean, professional illustration for a tech blog about: {prompt}. IMPORTANT: Do NOT include any text, words, letters, or typography in the image. Pure visual illustration only.",
                 config=types.GenerateContentConfig(
                     response_modalities=["IMAGE", "TEXT"],
                 )
