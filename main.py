@@ -4,7 +4,7 @@ from src.crawlers.hacker_news import HackerNewsCrawler
 from src.crawlers.techcrunch import TechCrunchCrawler
 from src.crawlers.reddit import RedditCrawler
 from src.processor.llm_rewriter import ContentProcessor
-from src.publisher.wp_client import WordPressPublisher
+from src.publisher.blogger_client import BloggerPublisher
 
 load_dotenv()
 
@@ -13,7 +13,7 @@ def main():
     
     crawlers = [HackerNewsCrawler(), TechCrunchCrawler(), RedditCrawler()]
     processor = ContentProcessor()
-    publisher = WordPressPublisher()
+    publisher = BloggerPublisher()
     
     for crawler in crawlers:
         try:
@@ -21,7 +21,8 @@ def main():
             for item in items:
                 print(f"Processing: {item['title']}")
                 processed = processor.process_content(item)
-                link = publisher.post_article(processed, status='draft')
+                # is_draft=True: 임시저장, False: 바로 공개
+                link = publisher.post_article(processed, is_draft=True)
                 print(f"Result: {link}")
         except Exception as e:
             print(f"Error: {e}")
