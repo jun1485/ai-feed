@@ -27,24 +27,39 @@ class ImageGenerator:
         try:
             # Gemini Nano Banana로 이미지 생성
             response = self.client.models.generate_content(
-                model="gemini-2.5-flash-image",
-                contents=[f"Create a professional, modern tech illustration for a blog post about: {prompt}. Style: clean, minimalist, suitable for tech blog."],
+                model="gemini-2.5-flash-preview-05-20",
+                contents=[f"Generate a professional tech blog illustration about: {prompt}"],
+                config={
+                    "response_modalities": ["image", "text"],
+                }
             )
             
             # response에서 이미지 데이터 추출
-            for part in response.parts:
-                if part.inline_data is not None:
-                    image_base64 = part.inline_data.data
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data is not None:
+                    # 이미지 데이터를 올바른 base64로 변환
+                    image_data = part.inline_data.data
+                    
+                    # bytes인 경우 base64로 인코딩
+                    if isinstance(image_data, bytes):
+                        image_base64 = base64.b64encode(image_data).decode('utf-8')
+                    else:
+                        # 이미 문자열인 경우 (base64)
+                        image_base64 = str(image_data)
+                    
+                    print(f"이미지 생성 완료! 크기: {len(image_base64)} chars")
                     
                     # ImgBB에 업로드
                     if self.imgbb_key:
                         upload_url = self._upload_to_imgbb(image_base64)
                         if upload_url:
+                            print(f"ImgBB 업로드 성공: {upload_url}")
                             return upload_url
                     
                     # ImgBB 키가 없으면 fallback
                     return self._get_fallback_url()
             
+            print("이미지 파트를 찾을 수 없음")
             return self._get_fallback_url()
             
         except Exception as e:
@@ -52,12 +67,13 @@ class ImageGenerator:
             return self._get_fallback_url()
     
     def _upload_to_imgbb(self, image_base64: str) -> Optional[str]:
-        """ImgBB에 base64 이미지 업로드"""
+        """ImgBB에 base64 이미지 업로드 (30일 후 자동 삭제)"""
         try:
             url = "https://api.imgbb.com/1/upload"
             payload = {
                 "key": self.imgbb_key,
                 "image": image_base64,
+                "expiration": 2592000,  # 30일 후 자동 삭제 (초 단위)
             }
             response = requests.post(url, data=payload)
             
