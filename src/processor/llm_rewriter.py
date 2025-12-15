@@ -1,31 +1,25 @@
 import os
-import google.generativeai as genai
+from google import genai
 from typing import Dict, Any
 from .image_generator import ImageGenerator
 
 class ContentProcessor:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
+        self.client = None
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        else:
-            self.model = None
+            self.client = genai.Client(api_key=self.api_key)
         
         self.image_generator = ImageGenerator()
 
     def process_content(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
-        if not self.model:
+        if not self.client:
             return {
                 "title": f"[Demo] {raw_data['title']}",
                 "content": f"Source: {raw_data['url']}\n\n{raw_data['original_content']}",
                 "tags": ["AI"],
                 "original_url": raw_data['url']
             }
-
-        # 이미지 생성
-        image_url = self.image_generator.generate_image_url(raw_data['title'])
-        image_html = f'<img src="{image_url}" alt="{raw_data["title"]}" style="width:100%; max-width:800px; margin: 20px 0;">' if image_url else ""
 
         prompt = f"""
         당신은 AI-feed 블로그 작성 봇입니다. 게시글에 인사와 소개를 적지 마세요.
@@ -46,7 +40,6 @@ class ContentProcessor:
            - 전문적이고 권위 있는 어조 (합니다/입니다 체)
            - 바로 핵심 내용부터 시작 (자기소개 하지 말 것)
            - 핵심 내용을 쉽게 풀어서 설명
-           - 본문 중간에 [IMAGE] 태그를 2~3개 넣어주세요 (나중에 이미지로 교체됨)
            - 마무리는 간단하게 요약만 (댓글 요청, 구독 요청 등 하지 말 것)
         
         3. **형식**: HTML 태그 사용 (h2, h3, p, strong, ul, li)
@@ -59,7 +52,10 @@ class ContentProcessor:
         """
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=[prompt]
+            )
             full_text = response.text
             
             # 제목과 본문 분리
@@ -73,15 +69,15 @@ class ContentProcessor:
                     content = "\n".join(lines[i+1:]).strip()
                     break
             
-            # [IMAGE] 태그를 실제 이미지로 교체
-            if image_html:
-                # 첫 번째 [IMAGE]는 메인 이미지로
-                content = content.replace("[IMAGE]", image_html, 1)
-                # 나머지 [IMAGE]는 다른 관련 이미지로
-                while "[IMAGE]" in content:
-                    alt_image = self.image_generator.generate_image_url(raw_data['title'])
-                    alt_html = f'<img src="{alt_image}" alt="관련 이미지" style="width:100%; max-width:800px; margin: 20px 0;">' if alt_image else ""
-                    content = content.replace("[IMAGE]", alt_html, 1)
+            # AI 이미지 생성하여 상단에 추가
+            print("이미지 생성 중...")
+            main_image = self.image_generator.generate_image_html(
+                raw_data['title'], 
+                alt_text=title
+            )
+            
+            # 본문 상단에 이미지 추가
+            content = main_image + "\n" + content
             
             return {
                 "title": title,
