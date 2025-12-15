@@ -1,6 +1,4 @@
 import os
-import random
-import time
 from dotenv import load_dotenv
 from src.crawlers.hacker_news import HackerNewsCrawler
 from src.crawlers.techcrunch import TechCrunchCrawler
@@ -11,11 +9,6 @@ from src.publisher.blogger_client import BloggerPublisher
 load_dotenv()
 
 def main():
-    # 13~20분 랜덤 대기 (봇 탐지 방지)
-    delay_minutes = random.randint(13, 20)
-    print(f"=== {delay_minutes}분 후 시작... ===")
-    time.sleep(delay_minutes * 60)
-    
     print("=== AI Feed Automation Started ===")
     
     crawlers = [HackerNewsCrawler(), TechCrunchCrawler(), RedditCrawler()]
