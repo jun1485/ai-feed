@@ -1,59 +1,82 @@
 import os
 import base64
+import requests
+import random
 from typing import Optional
 from google import genai
 
 class ImageGenerator:
     """
-    Gemini 2.5 Flash Image (Nano Banana) API를 사용한 AI 이미지 생성
+    Gemini 2.5 Flash Image (Nano Banana) + ImgBB 업로드
     """
     
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
+        self.imgbb_key = os.getenv("IMGBB_API_KEY")
         self.client = None
         if self.api_key:
             self.client = genai.Client(api_key=self.api_key)
     
-    def generate_image_base64(self, prompt: str) -> Optional[str]:
+    def generate_and_upload(self, prompt: str) -> Optional[str]:
         """
-        주제에 맞는 이미지를 AI로 생성하고 base64 데이터 반환
-        Blogger에는 base64 이미지를 직접 삽입 가능
+        Nano Banana로 이미지 생성 후 ImgBB에 업로드하여 URL 반환
         """
         if not self.client:
-            return None
-            
+            return self._get_fallback_url()
+        
         try:
-            # Gemini 2.5 Flash Image (Nano Banana) 모델로 이미지 생성
+            # Gemini Nano Banana로 이미지 생성
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash-image",
-                contents=[f"Generate a high quality, professional blog illustration about: {prompt}. Style: modern, clean, tech-focused."],
+                contents=[f"Create a professional, modern tech illustration for a blog post about: {prompt}. Style: clean, minimalist, suitable for tech blog."],
             )
             
             # response에서 이미지 데이터 추출
             for part in response.parts:
                 if part.inline_data is not None:
-                    # base64 인코딩된 이미지 데이터
-                    image_data = part.inline_data.data
-                    mime_type = part.inline_data.mime_type or "image/png"
+                    image_base64 = part.inline_data.data
                     
-                    # base64 데이터 URL 형식으로 반환
-                    return f"data:{mime_type};base64,{image_data}"
+                    # ImgBB에 업로드
+                    if self.imgbb_key:
+                        upload_url = self._upload_to_imgbb(image_base64)
+                        if upload_url:
+                            return upload_url
+                    
+                    # ImgBB 키가 없으면 fallback
+                    return self._get_fallback_url()
             
-            return None
+            return self._get_fallback_url()
             
         except Exception as e:
             print(f"이미지 생성 오류: {e}")
+            return self._get_fallback_url()
+    
+    def _upload_to_imgbb(self, image_base64: str) -> Optional[str]:
+        """ImgBB에 base64 이미지 업로드"""
+        try:
+            url = "https://api.imgbb.com/1/upload"
+            payload = {
+                "key": self.imgbb_key,
+                "image": image_base64,
+            }
+            response = requests.post(url, data=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result.get("data", {}).get("url")
+            else:
+                print(f"ImgBB 업로드 실패: {response.text}")
+                return None
+        except Exception as e:
+            print(f"ImgBB 오류: {e}")
             return None
+    
+    def _get_fallback_url(self) -> str:
+        """Fallback: Lorem Picsum 무료 이미지"""
+        seed = random.randint(1, 1000)
+        return f"https://picsum.photos/seed/{seed}/800/450"
     
     def generate_image_html(self, prompt: str, alt_text: str = "AI 생성 이미지") -> str:
         """이미지 HTML 태그 생성"""
-        image_data = self.generate_image_base64(prompt)
-        
-        if image_data:
-            return f'<p><img src="{image_data}" alt="{alt_text}" style="width:100%; max-width:800px; border-radius:8px;"></p>'
-        else:
-            # 이미지 생성 실패 시 placeholder 사용
-            import random
-            seed = random.randint(1, 1000)
-            fallback_url = f"https://picsum.photos/seed/{seed}/800/450"
-            return f'<p><img src="{fallback_url}" alt="{alt_text}" style="width:100%; max-width:800px; border-radius:8px;"></p>'
+        image_url = self.generate_and_upload(prompt)
+        return f'<p><img src="{image_url}" alt="{alt_text}" style="width:100%; max-width:800px; border-radius:8px;"></p>'

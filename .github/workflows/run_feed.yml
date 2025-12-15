@@ -19,6 +19,7 @@ jobs:
     - name: Run Automation
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
         BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
         BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
         BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
