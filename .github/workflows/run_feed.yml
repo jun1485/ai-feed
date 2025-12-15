@@ -2,7 +2,7 @@ name: AI Feed Automation
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 매 시간 정각에 실행
+    - cron: '0 */4 * * *'  # 4시간마다 실행 (하루 4번)
   workflow_dispatch:
 
 jobs:
