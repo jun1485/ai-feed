@@ -1,4 +1,6 @@
 import os
+import random
+import time
 from dotenv import load_dotenv
 from src.crawlers.hacker_news import HackerNewsCrawler
 from src.crawlers.techcrunch import TechCrunchCrawler
@@ -9,6 +11,11 @@ from src.publisher.blogger_client import BloggerPublisher
 load_dotenv()
 
 def main():
+    # 13~20분 랜덤 대기 (봇 탐지 방지)
+    delay_minutes = random.randint(13, 20)
+    print(f"=== {delay_minutes}분 후 시작... ===")
+    time.sleep(delay_minutes * 60)
+    
     print("=== AI Feed Automation Started ===")
     
     crawlers = [HackerNewsCrawler(), TechCrunchCrawler(), RedditCrawler()]
@@ -21,8 +28,8 @@ def main():
             for item in items:
                 print(f"Processing: {item['title']}")
                 processed = processor.process_content(item)
-                # is_draft=True: 임시저장, False: 바로 공개
-                link = publisher.post_article(processed, is_draft=True)
+                # is_draft=False: 바로 게시
+                link = publisher.post_article(processed, is_draft=False)
                 print(f"Result: {link}")
         except Exception as e:
             print(f"Error: {e}")

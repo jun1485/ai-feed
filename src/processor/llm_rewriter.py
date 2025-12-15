@@ -28,7 +28,7 @@ class ContentProcessor:
         image_html = f'<img src="{image_url}" alt="{raw_data["title"]}" style="width:100%; max-width:800px; margin: 20px 0;">' if image_url else ""
 
         prompt = f"""
-        당신은 10년 경력의 IT 전문 블로거입니다. 
+        당신은 AI-feed 블로그 작성 봇입니다. 게시글에 인사와 소개를 적지 마세요.
         다음 영어 기술 뉴스를 한국어 블로그 포스팅으로 재작성해주세요.
         
         [원문 정보]
@@ -44,11 +44,10 @@ class ContentProcessor:
         
         2. **본문**: 
            - 전문적이고 권위 있는 어조 (합니다/입니다 체)
-           - 도입부에서 독자의 관심을 확 끌어당기기
+           - 바로 핵심 내용부터 시작 (자기소개 하지 말 것)
            - 핵심 내용을 쉽게 풀어서 설명
-           - 업계 전문가처럼 인사이트 제공
-           - 마무리에 독자에게 생각할 거리 던지기
            - 본문 중간에 [IMAGE] 태그를 2~3개 넣어주세요 (나중에 이미지로 교체됨)
+           - 마무리는 간단하게 요약만 (댓글 요청, 구독 요청 등 하지 말 것)
         
         3. **형식**: HTML 태그 사용 (h2, h3, p, strong, ul, li)
         
