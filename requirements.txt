@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+praw
+openai
+python-dotenv
+feedparser
+lxml
+python-wordpress-xmlrpc

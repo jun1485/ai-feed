@@ -1,0 +1,32 @@
+import os
+from dotenv import load_dotenv
+from src.crawlers.hacker_news import HackerNewsCrawler
+from src.crawlers.techcrunch import TechCrunchCrawler
+from src.crawlers.reddit import RedditCrawler
+from src.processor.llm_rewriter import ContentProcessor
+from src.publisher.wp_client import WordPressPublisher
+
+load_dotenv()
+
+def main():
+    print("=== AI Feed Automation Started ===")
+    
+    crawlers = [HackerNewsCrawler(), TechCrunchCrawler(), RedditCrawler()]
+    processor = ContentProcessor()
+    publisher = WordPressPublisher()
+    
+    for crawler in crawlers:
+        try:
+            items = crawler.fetch_latest(limit=2)
+            for item in items:
+                print(f"Processing: {item['title']}")
+                processed = processor.process_content(item)
+                link = publisher.post_article(processed, status='draft')
+                print(f"Result: {link}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    print("=== Finished ===")
+
+if __name__ == "__main__":
+    main()
