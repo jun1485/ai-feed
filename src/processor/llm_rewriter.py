@@ -1,6 +1,7 @@
 import os
 import google.generativeai as genai
 from typing import Dict, Any
+from .image_generator import ImageGenerator
 
 class ContentProcessor:
     def __init__(self):
@@ -10,6 +11,8 @@ class ContentProcessor:
             self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
         else:
             self.model = None
+        
+        self.image_generator = ImageGenerator()
 
     def process_content(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         if not self.model:
@@ -19,6 +22,10 @@ class ContentProcessor:
                 "tags": ["AI"],
                 "original_url": raw_data['url']
             }
+
+        # 이미지 생성
+        image_url = self.image_generator.generate_image_url(raw_data['title'])
+        image_html = f'<img src="{image_url}" alt="{raw_data["title"]}" style="width:100%; max-width:800px; margin: 20px 0;">' if image_url else ""
 
         prompt = f"""
         당신은 10년 경력의 IT 전문 블로거입니다. 
@@ -41,10 +48,11 @@ class ContentProcessor:
            - 핵심 내용을 쉽게 풀어서 설명
            - 업계 전문가처럼 인사이트 제공
            - 마무리에 독자에게 생각할 거리 던지기
+           - 본문 중간에 [IMAGE] 태그를 2~3개 넣어주세요 (나중에 이미지로 교체됨)
         
         3. **형식**: HTML 태그 사용 (h2, h3, p, strong, ul, li)
         
-        4. **필수**: 글 마지막에 "출처: [원문 보기]({raw_data['url']})" 포함
+        4. **필수**: 글 마지막에 "출처: <a href='{raw_data['url']}'>원문 보기</a>" 포함
         
         [출력 형식]
         첫 줄에 "TITLE: 제목" 형식으로 제목을 쓰고,
@@ -65,6 +73,16 @@ class ContentProcessor:
                     title = line.replace("TITLE:", "").strip()
                     content = "\n".join(lines[i+1:]).strip()
                     break
+            
+            # [IMAGE] 태그를 실제 이미지로 교체
+            if image_html:
+                # 첫 번째 [IMAGE]는 메인 이미지로
+                content = content.replace("[IMAGE]", image_html, 1)
+                # 나머지 [IMAGE]는 다른 관련 이미지로
+                while "[IMAGE]" in content:
+                    alt_image = self.image_generator.generate_image_url(raw_data['title'])
+                    alt_html = f'<img src="{alt_image}" alt="관련 이미지" style="width:100%; max-width:800px; margin: 20px 0;">' if alt_image else ""
+                    content = content.replace("[IMAGE]", alt_html, 1)
             
             return {
                 "title": title,

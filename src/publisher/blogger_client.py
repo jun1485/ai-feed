@@ -4,31 +4,46 @@ from typing import Dict, Any
 
 class BloggerPublisher:
     """
-    Google Blogger API v3를 사용한 포스팅 클라이언트
-    API 문서: https://developers.google.com/blogger/docs/3.0/using
+    Google Blogger API v3 - Refresh Token 지원 버전
     """
     
     API_BASE = "https://www.googleapis.com/blogger/v3"
+    TOKEN_URL = "https://oauth2.googleapis.com/token"
     
     def __init__(self):
-        self.api_key = os.getenv("BLOGGER_API_KEY")
         self.blog_id = os.getenv("BLOGGER_BLOG_ID")
-        self.access_token = os.getenv("BLOGGER_ACCESS_TOKEN")
+        self.client_id = os.getenv("BLOGGER_CLIENT_ID")
+        self.client_secret = os.getenv("BLOGGER_CLIENT_SECRET")
+        self.refresh_token = os.getenv("BLOGGER_REFRESH_TOKEN")
+        self.access_token = None
+        
+        # 시작 시 Access Token 갱신
+        if all([self.client_id, self.client_secret, self.refresh_token]):
+            self._refresh_access_token()
+    
+    def _refresh_access_token(self):
+        """Refresh Token을 사용하여 새 Access Token 발급"""
+        try:
+            response = requests.post(self.TOKEN_URL, data={
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "refresh_token": self.refresh_token,
+                "grant_type": "refresh_token"
+            })
+            
+            if response.status_code == 200:
+                self.access_token = response.json().get("access_token")
+                print("Access Token 갱신 성공!")
+            else:
+                print(f"Token 갱신 실패: {response.text}")
+        except Exception as e:
+            print(f"Token 갱신 오류: {e}")
         
     def post_article(self, article_data: Dict[str, Any], is_draft: bool = True) -> str:
-        """
-        Blogger에 글을 발행합니다.
-        
-        article_data: { 'title', 'content', 'tags' }
-        is_draft: True=임시저장, False=공개
-        
-        Returns: 발행된 글의 URL 또는 에러 메시지
-        """
         if not all([self.blog_id, self.access_token]):
             print("Blogger 인증 정보가 없습니다.")
             return "Skipped (No Credentials)"
         
-        # 태그를 labels로 변환
         labels = article_data.get("tags", ["AI", "Tech"])
         
         payload = {
@@ -43,7 +58,6 @@ class BloggerPublisher:
             "Content-Type": "application/json"
         }
         
-        # isDraft 파라미터로 임시저장/공개 결정
         url = f"{self.API_BASE}/blogs/{self.blog_id}/posts?isDraft={str(is_draft).lower()}"
         
         try:
@@ -55,8 +69,7 @@ class BloggerPublisher:
                 print(f"Blogger 발행 성공: {post_url}")
                 return post_url
             else:
-                error_msg = response.text
-                print(f"Blogger 발행 실패: {response.status_code} - {error_msg}")
+                print(f"Blogger 발행 실패: {response.status_code} - {response.text}")
                 return f"Error: {response.status_code}"
                 
         except Exception as e:
