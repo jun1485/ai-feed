@@ -8,7 +8,7 @@ from google.genai import types
 
 class ImageGenerator:
     """
-    Gemini Imagen 3 + ImgBB 업로드
+    Gemini 2.0 Flash 이미지 생성 + ImgBB 업로드
     """
     
     def __init__(self):
@@ -20,45 +20,65 @@ class ImageGenerator:
     
     def generate_and_upload(self, prompt: str) -> Optional[str]:
         """
-        Imagen 3로 이미지 생성 후 ImgBB에 업로드하여 URL 반환
+        Gemini로 이미지 생성 후 ImgBB에 업로드하여 URL 반환
         """
         if not self.client:
+            print("[DEBUG] Gemini client가 없음 - fallback")
             return self._get_fallback_url()
         
         try:
-            # Imagen 3로 이미지 생성
-            response = self.client.models.generate_images(
-                model="imagen-3.0-generate-002",
-                prompt=f"Professional tech blog illustration about: {prompt}. Style: clean, modern, minimalist.",
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
+            print(f"[DEBUG] 이미지 생성 시도: {prompt[:50]}...")
+            
+            # Gemini 2.0 Flash로 이미지 생성 요청
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=f"Generate a simple, professional illustration for: {prompt}",
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE", "TEXT"],
                 )
             )
             
-            # 생성된 이미지 추출
-            if response.generated_images and len(response.generated_images) > 0:
-                image = response.generated_images[0]
-                image_bytes = image.image.image_bytes
-                
-                # bytes를 base64로 인코딩
-                image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                print(f"이미지 생성 완료! 크기: {len(image_base64)} chars")
-                
-                # ImgBB에 업로드
-                if self.imgbb_key:
-                    upload_url = self._upload_to_imgbb(image_base64)
-                    if upload_url:
-                        print(f"ImgBB 업로드 성공: {upload_url}")
-                        return upload_url
-                
-                # ImgBB 키가 없으면 fallback
-                return self._get_fallback_url()
+            print(f"[DEBUG] Response 받음: {type(response)}")
             
-            print("이미지 생성 결과 없음")
+            # 응답에서 이미지 찾기
+            if response.candidates:
+                for candidate in response.candidates:
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            print(f"[DEBUG] Part type: {type(part)}")
+                            
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                print(f"[DEBUG] inline_data 발견! mime_type: {part.inline_data.mime_type}")
+                                
+                                image_data = part.inline_data.data
+                                
+                                # bytes인 경우 base64로 인코딩
+                                if isinstance(image_data, bytes):
+                                    image_base64 = base64.b64encode(image_data).decode('utf-8')
+                                else:
+                                    image_base64 = str(image_data)
+                                
+                                print(f"[DEBUG] Base64 길이: {len(image_base64)}")
+                                
+                                # ImgBB에 업로드
+                                if self.imgbb_key:
+                                    upload_url = self._upload_to_imgbb(image_base64)
+                                    if upload_url:
+                                        print(f"[DEBUG] ImgBB 업로드 성공: {upload_url}")
+                                        return upload_url
+                                    else:
+                                        print("[DEBUG] ImgBB 업로드 실패")
+                                else:
+                                    print("[DEBUG] ImgBB 키 없음")
+                            
+                            elif hasattr(part, 'text'):
+                                print(f"[DEBUG] Text part: {part.text[:100] if part.text else 'empty'}...")
+            
+            print("[DEBUG] 이미지 파트를 찾지 못함 - fallback")
             return self._get_fallback_url()
             
         except Exception as e:
-            print(f"이미지 생성 오류: {e}")
+            print(f"[DEBUG] 이미지 생성 오류: {type(e).__name__}: {e}")
             return self._get_fallback_url()
     
     def _upload_to_imgbb(self, image_base64: str) -> Optional[str]:
@@ -68,18 +88,20 @@ class ImageGenerator:
             payload = {
                 "key": self.imgbb_key,
                 "image": image_base64,
-                "expiration": 2592000,  # 30일 후 자동 삭제 (초 단위)
+                "expiration": 2592000,
             }
             response = requests.post(url, data=payload)
+            
+            print(f"[DEBUG] ImgBB 응답 코드: {response.status_code}")
             
             if response.status_code == 200:
                 result = response.json()
                 return result.get("data", {}).get("url")
             else:
-                print(f"ImgBB 업로드 실패: {response.text}")
+                print(f"[DEBUG] ImgBB 에러: {response.text[:200]}")
                 return None
         except Exception as e:
-            print(f"ImgBB 오류: {e}")
+            print(f"[DEBUG] ImgBB 오류: {e}")
             return None
     
     def _get_fallback_url(self) -> str:
