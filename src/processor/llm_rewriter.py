@@ -1,7 +1,6 @@
 import os
 from google import genai
 from typing import Dict, Any
-from .image_generator import ImageGenerator
 
 class ContentProcessor:
     def __init__(self):
@@ -9,8 +8,6 @@ class ContentProcessor:
         self.client = None
         if self.api_key:
             self.client = genai.Client(api_key=self.api_key)
-        
-        self.image_generator = ImageGenerator()
 
     def process_content(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         if not self.client:
@@ -68,16 +65,6 @@ class ContentProcessor:
                     title = line.replace("TITLE:", "").strip()
                     content = "\n".join(lines[i+1:]).strip()
                     break
-            
-            # AI 이미지 생성하여 상단에 추가
-            print("이미지 생성 중...")
-            main_image = self.image_generator.generate_image_html(
-                raw_data['title'], 
-                alt_text=title
-            )
-            
-            # 본문 상단에 이미지 추가
-            content = main_image + "\n" + content
             
             return {
                 "title": title,
