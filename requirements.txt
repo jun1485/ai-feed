@@ -1,8 +1,7 @@
 requests
 beautifulsoup4
 praw
-openai
+google-generativeai
 python-dotenv
 feedparser
 lxml
-python-wordpress-xmlrpc
