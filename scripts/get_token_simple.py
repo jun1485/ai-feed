@@ -1,21 +1,22 @@
+"""
+OAuth Token 교환 스크립트 (예시)
+실제 사용 시 .env 파일에서 환경변수를 로드하세요.
+
+사용법:
+1. .env 파일에 BLOGGER_CLIENT_ID, BLOGGER_CLIENT_SECRET 설정
+2. get_blogger_token.py 스크립트로 인증 진행
+"""
+
+import os
 import requests
+from dotenv import load_dotenv
 
-response = requests.post('https://oauth2.googleapis.com/token', data={
-    'client_id': '1051190155640-61pcnrj37cjnpmf79jffadkkhpk1tgfg.apps.googleusercontent.com',
-    'client_secret': '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',
-    'code': '4/0ATX87lN3Hj3ryUBOhHwgNyXJ9_VvJ9IiexZZOxORviCZvclXGWtfu9LjwUcvyoWlHw4W-g',
-    'grant_type': 'authorization_code',
-    'redirect_uri': 'http://localhost:8888/callback'
-})
+load_dotenv()
 
-result = response.json()
+# 환경변수에서 로드 (절대 하드코딩 금지!)
+CLIENT_ID = os.getenv('BLOGGER_CLIENT_ID')
+CLIENT_SECRET = os.getenv('BLOGGER_CLIENT_SECRET')
 
-# 결과를 파일로 저장
-with open('token_result.txt', 'w') as f:
-    if 'refresh_token' in result:
-        f.write("SUCCESS!\n")
-        f.write(f"REFRESH_TOKEN={result['refresh_token']}\n")
-    else:
-        f.write(f"ERROR: {result}\n")
-
-print("Result saved to token_result.txt")
+# 사용 예시 (실제 코드는 .env에서 가져와야 함)
+print("이 스크립트는 예시입니다.")
+print("실제 토큰 발급은 get_blogger_token.py를 사용하세요.")
