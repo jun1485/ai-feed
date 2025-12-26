@@ -3,6 +3,13 @@ from google import genai
 from typing import Dict, Any, List
 from .image_generator import ImageGenerator
 
+# 쿠팡 파트너스 연동 (선택사항)
+try:
+    from ..affiliate.coupang_partners import CoupangProductRecommender, create_fallback_product_html
+    COUPANG_AVAILABLE = True
+except ImportError:
+    COUPANG_AVAILABLE = False
+
 class ContentProcessor:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
@@ -11,6 +18,12 @@ class ContentProcessor:
             self.client = genai.Client(api_key=self.api_key)
         
         self.image_generator = ImageGenerator()
+        
+        # 쿠팡 파트너스 추천 (API 키가 있으면 활성화)
+        self.coupang_recommender = None
+        if COUPANG_AVAILABLE:
+            self.coupang_recommender = CoupangProductRecommender()
+            print("[쿠팡 파트너스] 연동 활성화")
         
         # 최근 발행된 글 목록 (내부 링크용)
         self.recent_posts = []
@@ -187,6 +200,16 @@ class ContentProcessor:
                     )
                 else:
                     final_content += "\n" + internal_links
+            
+            # 쿠팡 파트너스 상품 추천 추가
+            if self.coupang_recommender:
+                try:
+                    product_html = self.coupang_recommender.generate_product_html(title, content)
+                    if product_html:
+                        final_content += "\n" + product_html
+                        print("[쿠팡 파트너스] 상품 추천 추가됨")
+                except Exception as e:
+                    print(f"[쿠팡 파트너스] 상품 추천 실패: {e}")
             
             return {
                 "title": title,
