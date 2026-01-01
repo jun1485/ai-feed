@@ -174,6 +174,13 @@ class ContentProcessor:
                 elif stripped and not any(stripped.startswith(p) for p in ["TITLE:", "META:", "ALT:", "TAGS:"]):
                     # 본문 시작
                     content = "\n".join(lines[i:]).strip()
+                    # ```html 코드블록 제거
+                    if content.startswith("```html"):
+                        content = content[7:].strip()  # ```html 제거
+                    if content.startswith("```"):
+                        content = content[3:].strip()  # ``` 제거
+                    if content.endswith("```"):
+                        content = content[:-3].strip()  # 마지막 ``` 제거
                     break
             
             # 이미지 생성 (개선된 Alt 텍스트 사용)
