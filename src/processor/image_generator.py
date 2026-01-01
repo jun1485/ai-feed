@@ -8,8 +8,8 @@ from google.genai import types
 
 class ImageGenerator:
     """
-    Imagen 3 이미지 생성 + ImgBB 업로드
-    고품질 AI 이미지 생성 (16:9 비율, 텍스트 없음)
+    Gemini 2.0 Flash 이미지 생성 + ImgBB 업로드
+    (Imagen 3는 Billing 필요 - 활성화 시 전환 가능)
     """
     
     def __init__(self):
@@ -21,57 +21,61 @@ class ImageGenerator:
     
     def generate_and_upload(self, prompt: str) -> Optional[str]:
         """
-        Imagen 3로 이미지 생성 후 ImgBB에 업로드하여 URL 반환
+        Gemini 2.0 Flash로 이미지 생성 후 ImgBB에 업로드하여 URL 반환
+        (Imagen 3는 Billing 필요 - 나중에 전환 가능)
         """
         if not self.client:
             print("[DEBUG] Gemini client가 없음 - fallback")
             return self._get_fallback_url()
         
         try:
-            print(f"[DEBUG] Imagen 3 이미지 생성 시도: {prompt[:50]}...")
+            print(f"[DEBUG] Gemini 2.0 Flash 이미지 생성 시도: {prompt[:50]}...")
             
-            # 블로그용 프롬프트 최적화
-            optimized_prompt = f"Professional digital illustration for tech blog article about: {prompt}. Modern, clean design with vibrant colors. NO text, NO words, NO letters, NO typography. Pure visual artwork only."
-            
-            # Imagen 3로 이미지 생성
-            response = self.client.models.generate_images(
-                model="imagen-3.0-generate-001",
-                prompt=optimized_prompt,
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
-                    aspect_ratio="16:9",  # 블로그에 최적화된 비율
-                    person_generation="dont_allow",  # 사람 이미지 제외 (저작권 이슈 방지)
+            # Gemini 2.0 Flash로 이미지 생성 요청
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=f"Generate a clean, professional, high-quality digital illustration for a tech blog about: {prompt}. Modern design with vibrant colors. IMPORTANT: Do NOT include any text, words, letters, or typography in the image. Pure visual artwork only.",
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE", "TEXT"],
                 )
             )
             
-            print(f"[DEBUG] Imagen 3 Response 받음")
+            print(f"[DEBUG] Response 받음: {type(response)}")
             
-            # 생성된 이미지 처리
-            if response.generated_images:
-                generated_image = response.generated_images[0]
-                image_data = generated_image.image.image_bytes
-                
-                print(f"[DEBUG] 이미지 데이터 크기: {len(image_data)} bytes")
-                
-                # base64 인코딩
-                image_base64 = base64.b64encode(image_data).decode('utf-8')
-                
-                # ImgBB에 업로드
-                if self.imgbb_key:
-                    upload_url = self._upload_to_imgbb(image_base64)
-                    if upload_url:
-                        print(f"[DEBUG] ImgBB 업로드 성공: {upload_url}")
-                        return upload_url
-                    else:
-                        print("[DEBUG] ImgBB 업로드 실패")
-                else:
-                    print("[DEBUG] ImgBB 키 없음")
+            # 응답에서 이미지 찾기
+            if response.candidates:
+                for candidate in response.candidates:
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                print(f"[DEBUG] inline_data 발견! mime_type: {part.inline_data.mime_type}")
+                                
+                                image_data = part.inline_data.data
+                                
+                                # bytes인 경우 base64로 인코딩
+                                if isinstance(image_data, bytes):
+                                    image_base64 = base64.b64encode(image_data).decode('utf-8')
+                                else:
+                                    image_base64 = str(image_data)
+                                
+                                print(f"[DEBUG] Base64 길이: {len(image_base64)}")
+                                
+                                # ImgBB에 업로드
+                                if self.imgbb_key:
+                                    upload_url = self._upload_to_imgbb(image_base64)
+                                    if upload_url:
+                                        print(f"[DEBUG] ImgBB 업로드 성공: {upload_url}")
+                                        return upload_url
+                                    else:
+                                        print("[DEBUG] ImgBB 업로드 실패")
+                                else:
+                                    print("[DEBUG] ImgBB 키 없음")
             
-            print("[DEBUG] 이미지 생성 실패 - fallback")
+            print("[DEBUG] 이미지 파트를 찾지 못함 - fallback")
             return self._get_fallback_url()
             
         except Exception as e:
-            print(f"[DEBUG] Imagen 3 오류: {type(e).__name__}: {e}")
+            print(f"[DEBUG] 이미지 생성 오류: {type(e).__name__}: {e}")
             return self._get_fallback_url()
     
     def _upload_to_imgbb(self, image_base64: str) -> Optional[str]:
