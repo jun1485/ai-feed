@@ -41,23 +41,40 @@ def main():
             for item in items:
                 print(f"\n📝 Processing: {item['title']}")
                 
-                # 콘텐츠 처리 (SEO 최적화 적용)
-                processed = processor.process_content(item)
+                # 한국어 버전 발행
+                print(f"  🇰🇷 Korean version...")
+                processed_ko = processor.process_content(item, language="ko")
                 
-                # 메타 설명 출력 (디버그용)
-                if processed.get("meta_description"):
-                    print(f"📋 Meta: {processed['meta_description'][:50]}...")
+                if processed_ko.get("meta_description"):
+                    print(f"  📋 Meta (KR): {processed_ko['meta_description'][:50]}...")
                 
-                # 발행
-                link = publisher.post_article(processed, is_draft=False)
-                print(f"✅ Result: {link}")
+                link_ko = publisher.post_article(processed_ko, is_draft=False)
+                print(f"  ✅ KR Result: {link_ko}")
                 
-                # 발행 성공 시 내부 링크 목록에 추가
-                if link and not link.startswith("Error") and not link.startswith("Skipped"):
-                    processor.add_recent_post(processed["title"], link)
+                if link_ko and not link_ko.startswith("Error") and not link_ko.startswith("Skipped"):
+                    processor.add_recent_post(processed_ko["title"], link_ko)
                     published_posts.append({
-                        "title": processed["title"],
-                        "url": link
+                        "title": processed_ko["title"],
+                        "url": link_ko,
+                        "language": "ko"
+                    })
+                
+                # 영어 버전 발행
+                print(f"  🇺🇸 English version...")
+                processed_en = processor.process_content(item, language="en")
+                
+                if processed_en.get("meta_description"):
+                    print(f"  📋 Meta (EN): {processed_en['meta_description'][:50]}...")
+                
+                link_en = publisher.post_article(processed_en, is_draft=False)
+                print(f"  ✅ EN Result: {link_en}")
+                
+                if link_en and not link_en.startswith("Error") and not link_en.startswith("Skipped"):
+                    processor.add_recent_post(processed_en["title"], link_en)
+                    published_posts.append({
+                        "title": processed_en["title"],
+                        "url": link_en,
+                        "language": "en"
                     })
                     
         except Exception as e:
@@ -69,8 +86,9 @@ def main():
     if published_posts:
         print("\n📚 Published posts:")
         for post in published_posts:
-            print(f"  - {post['title']}")
-            print(f"    {post['url']}")
+            lang_emoji = "🇰🇷" if post.get("language") == "ko" else "🇺🇸"
+            print(f"  {lang_emoji} {post['title']}")
+            print(f"     {post['url']}")
 
 if __name__ == "__main__":
     main()
