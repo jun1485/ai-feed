@@ -1,4 +1,5 @@
 import os
+import re
 from google import genai
 from typing import Dict, Any, List
 from .image_generator import ImageGenerator
@@ -53,6 +54,37 @@ class ContentProcessor:
         
         links_html += "</ul></div>"
         return links_html
+
+    def _validate_content(self, content: str) -> str:
+        """플레이스홀더 및 저품질 패턴 감지/제거"""
+        # AI 플레이스홀더 패턴 감지 (대괄호 안에 지시문이 있는 경우)
+        placeholder_patterns = [
+            r'\[insert[^\]]*\]',           # [insert ...]
+            r'\[add[^\]]*\]',              # [add ...]
+            r'\[TBD[^\]]*\]',              # [TBD ...]
+            r'\[여기에[^\]]*\]',            # [여기에 ...]
+            r'\[추가[^\]]*\]',              # [추가 ...]
+            r'\[삽입[^\]]*\]',              # [삽입 ...]
+            r'\[필요[^\]]*\]',              # [필요 ...]
+            r'\[[^\]]*needed[^\]]*\]',     # [...needed...]
+            r'\[[^\]]*required[^\]]*\]',   # [...required...]
+            r'\[[^\]]*todo[^\]]*\]',       # [...todo...]
+        ]
+        
+        found_placeholders = []
+        for pattern in placeholder_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE)
+            found_placeholders.extend(matches)
+        
+        if found_placeholders:
+            print(f"[경고] 플레이스홀더 발견 및 제거: {found_placeholders}")
+            for pattern in placeholder_patterns:
+                content = re.sub(pattern, '', content, flags=re.IGNORECASE)
+            # 연속된 공백 정리
+            content = re.sub(r'\s{2,}', ' ', content)
+            content = re.sub(r'\s+([.,;:])', r'\1', content)
+        
+        return content
 
     def process_content(self, raw_data: Dict[str, Any], language: str = "ko") -> Dict[str, Any]:
         """
@@ -162,6 +194,9 @@ class ContentProcessor:
             if lang_tag not in tags:
                 tags.append(lang_tag)
             
+            # 콘텐츠 검증 (플레이스홀더 제거)
+            final_content = self._validate_content(final_content)
+            
             return {
                 "title": title,
                 "content": final_content,
@@ -226,12 +261,22 @@ class ContentProcessor:
         
         4. **본문 SEO 구조**:
            - 첫 문단에 핵심 키워드 자연스럽게 포함
-           - <h2> 태그로 소제목 구성 (3-4개)
+           - <h2> 태그로 소제목 구성 (4-5개)
            - 소제목에도 키워드 포함
-           - 본문 1500자 이상 작성
+           - 본문 2000자 이상 작성 (매우 중요!)
            - 마지막에 요약/결론 섹션 추가
         
-        5. **HTML 형식 규칙**:
+        5. **[필수] 나의 분석 섹션 - 반드시 포함!**:
+           - 본문 중간 또는 끝에 "<h2>🔍 나의 분석</h2>" 섹션 필수!
+           - 이 섹션에는 다음 내용을 포함해야 함:
+             * 이 기술/뉴스가 한국 시장에 미칠 영향
+             * 개발자나 일반 사용자에게 주는 시사점
+             * 경쟁사 대비 장단점 분석
+             * 향후 전망이나 예상되는 변화
+           - 최소 3-4문장 이상의 실질적인 인사이트 제공
+           - 단순 사실 나열이 아닌 의견과 분석 필수
+        
+        6. **HTML 형식 규칙**:
            - 반드시 HTML 태그만 사용!
            - 마크다운 문법(**, ##, *, - 등) 절대 금지!
            - 소제목: <h2> (절대 h3 이하 사용 금지, 첫 소제목은 h2 필수!)
@@ -242,11 +287,17 @@ class ContentProcessor:
            - 링크: <a href="...">
            - 글 마지막: "출처: <a href='{raw_data['url']}'>원문 보기</a>"
         
-        6. **언어 규칙**:
+        7. **[금지] 플레이스홀더 사용 절대 금지!**:
+           - [insert ...], [여기에 ...], [추가 필요] 같은 대괄호 플레이스홀더 절대 금지!
+           - 모든 문장은 완성된 형태로 작성
+           - 정보가 부족하면 일반적인 표현으로 대체
+           - 예: "[연도 추가]" (X) → "최근 몇 년간" (O)
+        
+        8. **언어 규칙**:
            - 반드시 한국어로만 작성
            - 영어는 고유명사(회사명, 제품명, 인명)에만 허용
         
-        7. **태그/라벨 생성**:
+        9. **태그/라벨 생성**:
            - 글 내용에 맞는 관련 태그 5개 생성
            - 필수: "AI" 또는 관련 기술명
            - 회사명, 제품명, 기술 용어 포함
@@ -303,12 +354,22 @@ class ContentProcessor:
         
         4. **Content SEO Structure**:
            - Include keywords naturally in the first paragraph
-           - Use <h2> tags for subheadings (3-4 sections)
+           - Use <h2> tags for subheadings (4-5 sections)
            - Include keywords in subheadings
-           - Write at least 800 words
+           - Write at least 1000 words (VERY IMPORTANT!)
            - Add a summary/conclusion section at the end
         
-        5. **HTML Format Rules**:
+        5. **[REQUIRED] Editor's Take Section - MUST INCLUDE!**:
+           - Include "<h2>🔍 Editor's Take</h2>" section in the middle or end!
+           - This section MUST contain:
+             * Your analysis of why this matters for the industry
+             * Implications for developers and general users
+             * Comparison with competitors (pros and cons)
+             * Future predictions and expected changes
+           - Provide at least 3-4 sentences of genuine insight
+           - This is NOT a summary - it's YOUR unique perspective and analysis
+        
+        6. **HTML Format Rules**:
            - Use ONLY HTML tags!
            - NO Markdown syntax (**, ##, *, - etc.)!
            - Subheadings: <h2> (no h3 or lower, first subheading must be h2!)
@@ -319,12 +380,18 @@ class ContentProcessor:
            - Links: <a href="...">
            - End with: "Source: <a href='{raw_data['url']}'>Original Article</a>"
         
-        6. **Language Rules**:
+        7. **[FORBIDDEN] NO Placeholder Text!**:
+           - NEVER use placeholders like [insert ...], [add here], [TBD]
+           - All sentences must be complete and final
+           - If information is missing, use general expressions instead
+           - Example: "[insert year]" (WRONG) → "in recent years" (CORRECT)
+        
+        8. **Language Rules**:
            - Write entirely in English
            - Use clear, professional tech journalism style
            - Avoid jargon that general readers wouldn't understand
         
-        7. **Tags/Labels**:
+        9. **Tags/Labels**:
            - Generate 5 relevant tags
            - Required: "AI" or related tech name
            - Include company names, product names, tech terms
