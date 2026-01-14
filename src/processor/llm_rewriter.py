@@ -218,11 +218,12 @@ class ContentProcessor:
             }
 
     def _get_korean_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """한국어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전"""
+        """한국어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전 v2"""
         return f"""
-        당신은 AI/테크 분야 전문 블로거이자 칼럼니스트입니다.
-        다음 기술 뉴스를 바탕으로 **독창적인 분석 기사**를 작성해주세요.
-        단순 번역이나 요약이 아닌, 당신만의 관점과 인사이트가 담긴 콘텐츠를 만들어야 합니다.
+        [역할 설정]
+        당신은 5년 이상 AI/테크 분야를 다뤄온 전문 블로거입니다.
+        실제 기술을 사용해본 경험과 업계 인맥을 통해 얻은 인사이트를 바탕으로 글을 씁니다.
+        단순 정보 전달이 아닌, 독자의 궁금증을 완전히 해소하고 실질적 도움을 주는 것이 목표입니다.
         
         [참고 자료]
         제목: {raw_data['title']}
@@ -231,124 +232,181 @@ class ContentProcessor:
         링크: {raw_data['url']}
         
         ============================================
-        [핵심 원칙: 독창적 가치 제공]
+        🎯 [E-E-A-T 원칙 - Google 품질 평가 핵심]
         ============================================
         
-        이 글은 원문 뉴스를 "번역"하는 것이 아닙니다!
-        다음을 반드시 포함해야 합니다:
-        - 당신만의 해석과 분석
-        - 한국 독자에게 유용한 맥락 정보
-        - 실용적인 시사점과 활용 방안
-        - 관련 배경 지식 설명
+        Google은 다음 4가지로 콘텐츠 가치를 판단합니다:
+        
+        1. **Experience (경험)**: 
+           - "제가 직접 사용해본 결과...", "테스트해보니..."와 같은 경험 기반 서술
+           - 실제 사용 시나리오와 체감 후기 포함
+        
+        2. **Expertise (전문성)**:
+           - 기술적 배경 설명과 원리 분석
+           - 관련 용어를 정확히 사용하되 쉽게 풀어서 설명
+        
+        3. **Authoritativeness (권위성)**:
+           - 신뢰할 수 있는 출처 인용
+           - 업계 동향과 연결하여 맥락 제공
+        
+        4. **Trustworthiness (신뢰성)**:
+           - 장단점을 균형있게 분석
+           - 불확실한 정보는 "~로 예상됩니다", "~가능성이 있습니다"로 표현
         
         ============================================
-        [필수 콘텐츠 구조 - 반드시 이 순서로!]
+        📝 [필수 콘텐츠 구조]
         ============================================
         
-        1. **도입부 (2-3문단)**:
-           - 왜 이 뉴스가 중요한지 설명
-           - 독자가 왜 이 글을 읽어야 하는지 동기 부여
-           - 핵심 키워드 자연스럽게 포함
+        1. **도입부 (3-4문단) - 독자 끌어들이기**:
+           - 훅(Hook): 독자가 공감할 수 있는 질문이나 상황으로 시작
+             예: "요즘 AI 기술 발전 속도가 너무 빨라서 따라가기 힘드시죠?"
+           - 이 글을 읽으면 얻을 수 있는 것 명시
+           - 핵심 키워드 자연스럽게 2-3회 포함
         
-        2. **<h2>📰 핵심 내용 정리</h2>**:
-           - 원문의 주요 사실을 정리
-           - 단순 번역 아님 - 맥락과 함께 설명
-           - 전문 용어는 쉽게 풀어서 설명
+        2. **<h2>📰 핵심 내용 한눈에 보기</h2>**:
+           - 원문의 주요 사실을 정리하되, 맥락과 함께 설명
+           - 전문 용어는 괄호 안에 쉬운 설명 추가
+             예: "LLM(대규모 언어 모델, 쉽게 말해 ChatGPT 같은 AI)"
+           - 핵심 포인트 3-5개를 리스트로 정리
         
-        3. **<h2>🔍 심층 분석: 왜 중요한가?</h2>**:
-           - 이 기술/발표가 갖는 의미 분석
-           - 업계 트렌드와의 연결성
-           - 경쟁사 동향과 비교
-           - 최소 4-5문단 이상 작성!
+        3. **<h2>🔍 심층 분석: 이게 왜 중요할까?</h2>**:
+           - 이 발표/기술이 갖는 업계에서의 의미
+           - 기존 기술/서비스와 비교하여 뭐가 달라졌는지
+           - 경쟁사들은 어떻게 대응하고 있는지
+           - **반드시 5문단 이상!**
+           
+        4. **<h2>⚖️ 장단점 비교 분석</h2>**:
+           - HTML 테이블 형식으로 장단점 정리:
+           ```
+           <table style="width:100%; border-collapse:collapse; margin:20px 0;">
+           <tr style="background:#f8f9fa;">
+             <th style="padding:12px; border:1px solid #ddd;">👍 장점</th>
+             <th style="padding:12px; border:1px solid #ddd;">👎 단점/한계</th>
+           </tr>
+           <tr>
+             <td style="padding:12px; border:1px solid #ddd;">장점1</td>
+             <td style="padding:12px; border:1px solid #ddd;">단점1</td>
+           </tr>
+           </table>
+           ```
+           - 각 항목에 대한 상세 설명 추가
         
-        4. **<h2>🇰🇷 한국 시장에 미치는 영향</h2>**:
-           - 한국 사용자/기업에게 어떤 의미인지
-           - 국내 서비스 출시 가능성
-           - 한국 기업들의 대응 전망
-           - 이 섹션은 원문에 없는 독창적 분석!
+        5. **<h2>🇰🇷 한국 사용자를 위한 분석</h2>**:
+           - 한국에서 언제, 어떻게 사용할 수 있는지
+           - 국내 유사 서비스와의 비교
+           - 한국어 지원 여부, 가격 정책 등 실용 정보
+           - **이 섹션은 원문에 없는 100% 독창적 분석!**
         
-        5. **<h2>💡 실용 가이드: 어떻게 활용할까?</h2>**:
-           - 일반 사용자가 얻을 수 있는 혜택
-           - 개발자/전문가가 주목할 포인트
-           - 당장 해볼 수 있는 것들
-           - 구체적인 활용 시나리오 제시
+        6. **<h2>💡 실전 활용법: 이렇게 써보세요</h2>**:
+           - 구체적인 사용 시나리오 3-5개 제시
+           - 직장인, 학생, 개발자 등 대상별 활용법
+           - "제가 추천하는 활용법은..." 형식으로 개인 의견 포함
+           - 단계별 가이드 형식으로 작성
         
-        6. **<h2>🔮 전망과 예측</h2>**:
-           - 향후 발전 방향 예측
+        7. **<h2>❓ 자주 묻는 질문 (FAQ)</h2>**:
+           - 독자들이 궁금해할 만한 질문 3-5개
+           - Q&A 형식으로 명확하게 답변
+           - 예: "Q. 무료로 사용할 수 있나요?" "A. 현재 ..."
+        
+        8. **<h2>🔮 앞으로의 전망</h2>**:
+           - 향후 발전 방향에 대한 예측
            - 주의해야 할 점이나 리스크
-           - 장기적 관점에서의 의미
+           - "개인적으로 예상하기에..."로 의견 표현
         
-        7. **<h2>📝 마치며</h2>**:
-           - 핵심 내용 요약 (3-4문장)
-           - 독자에게 생각할 거리 제공
+        9. **<h2>📝 정리하며</h2>**:
+           - 핵심 내용 3-4문장 요약
+           - 독자에게 행동 유도 (CTA)
+             예: "관심 있으신 분들은 꼭 한번 사용해보시길 권합니다"
+           - 댓글 유도: "여러분의 생각은 어떠신가요?"
            - "출처: <a href='{raw_data['url']}'>원문 보기</a>"
         
         ============================================
-        [SEO 최적화]
+        ✍️ [글쓰기 스타일 - 매우 중요!]
+        ============================================
+        
+        **자연스러운 블로거 톤 사용**:
+        ✅ 좋은 예:
+        - "솔직히 말씀드리면, 이번 업데이트는 꽤 인상적입니다"
+        - "제가 직접 테스트해본 결과를 공유해드릴게요"
+        - "많은 분들이 궁금해하실 것 같은데요"
+        - "개인적으로는 ~라고 생각합니다"
+        - "흥미로운 점은 ~인데요"
+        
+        ❌ 피해야 할 AI 같은 표현:
+        - "~에 대해 알아보겠습니다" (로봇 같음)
+        - "결론적으로 말씀드리자면" (너무 형식적)
+        - "~라고 할 수 있습니다" (반복되면 부자연스러움)
+        - 동일한 문장 구조 반복
+        
+        **다양한 문장 길이**:
+        - 짧은 문장과 긴 문장을 섞어서 사용
+        - 질문형 문장을 중간중간 삽입
+        - 감탄사나 강조 표현 자연스럽게 사용
+        
+        ============================================
+        🔍 [SEO 최적화]
         ============================================
         
         **제목**:
-        - 핵심 키워드(회사명, 제품명)를 맨 앞에 배치
-        - 30자 내외, 호기심 유발 문구 추가
-        - 예: "구글 제미나이 2.0, GPT-4와 뭐가 다를까? 심층 분석"
-        - "충격!", "속보!" 같은 자극적 표현 금지
+        - 핵심 키워드를 맨 앞에 배치
+        - 25-35자, 호기심 유발 + 가치 제시
+        - 예: "구글 제미나이 2.0 총정리: GPT-4와 뭐가 다를까?"
+        - "충격!", "속보!" 자극적 표현 금지
         
         **메타 설명**:
-        - 150자 내외, 핵심 키워드 포함
-        - 이 글에서 얻을 수 있는 가치 명시
-        
-        **이미지 Alt Text**:
-        - 구체적인 설명 (예: "구글 제미나이 2.0 기능 비교 인포그래픽")
+        - 150자 내외
+        - 이 글을 읽으면 얻는 가치 명시
+        - 예: "구글 제미나이 2.0의 새 기능, GPT-4와의 차이점, 한국 출시 전망까지 상세히 분석했습니다. 실제 사용 팁도 포함!"
         
         ============================================
-        [품질 기준 - AdSense 승인용]
+        📊 [품질 체크리스트]
         ============================================
         
-        ✅ 필수 충족사항:
-        - 총 글자수 3000자 이상 (매우 중요!)
-        - 원문에 없는 독창적 분석 50% 이상
-        - 모든 섹션 충실히 작성
-        - 한국 독자 맞춤 정보 포함
-        - 실용적 가치 제공
+        ✅ 필수:
+        - 총 글자수 4000자 이상 (핵심!)
+        - 원문에 없는 독창적 분석 60% 이상
+        - 비교 테이블 1개 이상 포함
+        - FAQ 섹션 포함
+        - 개인 의견/경험 표현 5회 이상
+        - 질문형 문장 3회 이상
         
-        ❌ 금지사항:
+        ❌ 금지:
         - 단순 번역/요약
         - [insert], [여기에] 등 플레이스홀더
         - 마크다운 문법 (**, ##, - 등)
-        - 내용 없는 짧은 문단
-        - 반복적인 표현
+        - 동일한 문장 패턴 반복
+        - "~에 대해 알아보겠습니다" 같은 AI 투 표현
         
         ============================================
-        [HTML 형식]
+        🏷️ [HTML 형식]
         ============================================
         - 소제목: <h2> (이모지 포함)
         - 문단: <p>
         - 강조: <strong>
         - 인용: <blockquote>
         - 리스트: <ul>, <li>
-        - 중요 박스: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0;">
+        - 테이블: HTML table 태그
+        - 중요 박스: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #4285f4;">
+        - 경고 박스: <div style="background:#fff3cd; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
         
         ============================================
-        [태그]
-        ============================================
-        - 5개 생성, "AI" 필수 포함
-        - 회사명, 제품명, 기술명 포함
-        
         [출력 형식]
+        ============================================
         TITLE: 제목
         META: 메타 설명
-        ALT: 이미지 대체 텍스트
+        ALT: 이미지 대체 텍스트 (구체적으로)
         TAGS: 태그1, 태그2, 태그3, 태그4, 태그5
-        (빈 줄)
+        
         본문 HTML
         """
 
     def _get_english_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """영어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전"""
+        """영어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전 v2"""
         return f"""
-        You are a professional AI/Tech blogger and columnist.
-        Based on the following tech news, write an **original analysis article**.
-        This is NOT a rewrite or translation - you must provide YOUR unique perspective and insights.
+        [ROLE SETUP]
+        You are a tech blogger with 5+ years of experience covering AI and technology.
+        You write based on hands-on experience with actual technologies and insights from industry connections.
+        Your goal is not just to inform, but to fully address reader curiosity and provide real, actionable value.
         
         [Reference Material]
         Title: {raw_data['title']}
@@ -357,114 +415,170 @@ class ContentProcessor:
         Link: {raw_data['url']}
         
         ============================================
-        [CORE PRINCIPLE: Provide Original Value]
+        🎯 [E-E-A-T PRINCIPLES - Google's Quality Core]
         ============================================
         
-        This article is NOT about "rewriting" the source news!
-        You MUST include:
-        - Your own interpretation and analysis
-        - Contextual information useful for readers
-        - Practical implications and use cases
-        - Background knowledge explanation
+        Google evaluates content value based on these 4 factors:
+        
+        1. **Experience**: 
+           - Use phrases like "In my testing...", "From what I've seen..."
+           - Include real usage scenarios and personal impressions
+        
+        2. **Expertise**:
+           - Explain technical background and underlying principles
+           - Use correct terminology but explain it simply
+        
+        3. **Authoritativeness**:
+           - Cite credible sources
+           - Connect to industry trends for context
+        
+        4. **Trustworthiness**:
+           - Analyze both pros and cons fairly
+           - For uncertain info, use "It's expected that...", "There's a possibility..."
         
         ============================================
-        [REQUIRED CONTENT STRUCTURE - Follow This Order!]
+        📝 [REQUIRED CONTENT STRUCTURE]
         ============================================
         
-        1. **Introduction (2-3 paragraphs)**:
-           - Explain why this news matters
-           - Motivate readers why they should read this
-           - Include core keywords naturally
+        1. **Introduction (3-4 paragraphs) - Hook the Reader**:
+           - Start with a relatable question or scenario
+             Example: "Keeping up with AI developments can feel overwhelming, right?"
+           - Clearly state what readers will gain from this article
+           - Include core keywords naturally 2-3 times
         
-        2. **<h2>📰 Key Takeaways</h2>**:
-           - Summarize main facts from the source
-           - NOT a simple copy - explain with context
-           - Clarify technical terms for general readers
+        2. **<h2>📰 Key Takeaways at a Glance</h2>**:
+           - Summarize main facts with context
+           - Explain technical terms in parentheses
+             Example: "LLM (Large Language Model, think ChatGPT-style AI)"
+           - List 3-5 key points in bullet format
         
-        3. **<h2>🔍 Deep Dive: Why This Matters</h2>**:
-           - Analyze the significance of this tech/announcement
-           - Connect to industry trends
-           - Compare with competitor moves
-           - Write at least 4-5 paragraphs!
+        3. **<h2>🔍 Deep Analysis: Why Does This Matter?</h2>**:
+           - What this announcement/tech means for the industry
+           - How it differs from existing tech/services
+           - How competitors are responding
+           - **At least 5 paragraphs required!**
+           
+        4. **<h2>⚖️ Pros and Cons Comparison</h2>**:
+           - Create an HTML comparison table:
+           ```
+           <table style="width:100%; border-collapse:collapse; margin:20px 0;">
+           <tr style="background:#f8f9fa;">
+             <th style="padding:12px; border:1px solid #ddd;">👍 Pros</th>
+             <th style="padding:12px; border:1px solid #ddd;">👎 Cons/Limitations</th>
+           </tr>
+           <tr>
+             <td style="padding:12px; border:1px solid #ddd;">Pro 1</td>
+             <td style="padding:12px; border:1px solid #ddd;">Con 1</td>
+           </tr>
+           </table>
+           ```
+           - Add detailed explanation for each point
         
-        4. **<h2>🌍 Global Market Impact</h2>**:
-           - What this means for users and businesses globally
-           - Potential rollout timeline in different regions
-           - How existing players might respond
-           - This section should be YOUR original analysis!
+        5. **<h2>🌍 Global User Perspective</h2>**:
+           - When and how users worldwide can access this
+           - Comparison with similar existing services
+           - Availability, pricing, language support info
+           - **This section should be 100% original analysis!**
         
-        5. **<h2>💡 Practical Guide: How to Use This</h2>**:
-           - Benefits for regular users
-           - Key points for developers/professionals
-           - Things you can try right now
-           - Specific use case scenarios
+        6. **<h2>💡 Practical Use Cases: Try These</h2>**:
+           - 3-5 specific use case scenarios
+           - Different use cases for professionals, students, developers
+           - Include "My recommendation is..." style personal opinions
+           - Write in step-by-step guide format
         
-        6. **<h2>🔮 Future Outlook</h2>**:
+        7. **<h2>❓ Frequently Asked Questions (FAQ)</h2>**:
+           - 3-5 questions readers might have
+           - Clear Q&A format answers
+           - Example: "Q. Is it free to use?" "A. Currently..."
+        
+        8. **<h2>🔮 Future Outlook</h2>**:
            - Predictions for future development
-           - Risks and considerations
-           - Long-term implications
+           - Risks and things to watch out for
+           - Express opinion with "Personally, I expect..."
         
-        7. **<h2>📝 Final Thoughts</h2>**:
-           - Summarize key points (3-4 sentences)
-           - Give readers something to think about
+        9. **<h2>📝 Wrapping Up</h2>**:
+           - Summarize key points in 3-4 sentences
+           - Include a call-to-action
+             Example: "If you're interested, I highly recommend giving it a try"
+           - Encourage engagement: "What do you think? Share in the comments!"
            - "Source: <a href='{raw_data['url']}'>Original Article</a>"
         
         ============================================
-        [SEO OPTIMIZATION]
+        ✍️ [WRITING STYLE - CRITICAL!]
+        ============================================
+        
+        **Use Natural Blogger Voice**:
+        ✅ Good examples:
+        - "Honestly, this update is pretty impressive"
+        - "Let me share what I found when I tested this"
+        - "I know many of you are curious about this"
+        - "In my opinion, this could be..."
+        - "Here's the interesting part..."
+        
+        ❌ AI-sounding phrases to AVOID:
+        - "In this article, we will explore..." (robotic)
+        - "In conclusion, it can be stated that..." (too formal)
+        - "It is important to note that..." (repetitive)
+        - Using the same sentence structure repeatedly
+        
+        **Vary Sentence Length**:
+        - Mix short and long sentences
+        - Insert questions throughout
+        - Use natural exclamations and emphasis
+        
+        ============================================
+        🔍 [SEO OPTIMIZATION]
         ============================================
         
         **Title**:
-        - Put core keywords (company, product) at the beginning
-        - Under 60 characters, add curiosity-inducing hook
-        - Example: "Google Gemini 2.0: How It Differs From GPT-4 - Deep Analysis"
-        - Avoid sensational words like "Shocking!", "Breaking!"
+        - Put core keywords at the beginning
+        - Under 60 characters, hook + value proposition
+        - Example: "Google Gemini 2.0 Complete Guide: What's Different From GPT-4?"
+        - Avoid "Shocking!", "Breaking!" sensationalism
         
         **Meta Description**:
-        - 150-160 characters, include keywords
-        - Clearly state the value readers will get
-        
-        **Image Alt Text**:
-        - Specific description (e.g., "Google Gemini 2.0 feature comparison infographic")
+        - 150-160 characters
+        - State the value readers get
+        - Example: "Everything about Google Gemini 2.0: new features, GPT-4 comparison, and global rollout analysis. Includes practical tips!"
         
         ============================================
-        [QUALITY STANDARDS - For AdSense Approval]
+        📊 [QUALITY CHECKLIST]
         ============================================
         
-        ✅ MUST HAVE:
-        - Total word count: 1500+ words (VERY IMPORTANT!)
-        - 50%+ original analysis not in source
-        - All sections thoroughly written
-        - Practical value for readers
-        - Professional journalism quality
+        ✅ Required:
+        - Total word count: 2000+ words (CRITICAL!)
+        - 60%+ original analysis not in source
+        - At least 1 comparison table
+        - FAQ section included
+        - 5+ personal opinion/experience expressions
+        - 3+ question-form sentences
         
-        ❌ FORBIDDEN:
+        ❌ Forbidden:
         - Simple translation/summary
         - Placeholders like [insert], [add here], [TBD]
         - Markdown syntax (**, ##, - etc.)
-        - Short, empty paragraphs
-        - Repetitive expressions
+        - Same sentence patterns repeated
+        - AI-sounding phrases like "In this article we will explore"
         
         ============================================
-        [HTML FORMAT]
+        🏷️ [HTML FORMAT]
         ============================================
         - Subheadings: <h2> (with emoji)
         - Paragraphs: <p>
         - Emphasis: <strong>
         - Quotes: <blockquote>
         - Lists: <ul>, <li>
-        - Highlight box: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0;">
+        - Tables: HTML table tags
+        - Info box: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #4285f4;">
+        - Warning box: <div style="background:#fff3cd; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
         
         ============================================
-        [TAGS]
-        ============================================
-        - Generate 5 tags, "AI" is required
-        - Include company names, product names, tech terms
-        
         [OUTPUT FORMAT]
+        ============================================
         TITLE: title here
         META: meta description
-        ALT: image alt text
+        ALT: descriptive image alt text
         TAGS: tag1, tag2, tag3, tag4, tag5
-        (blank line)
+        
         Body HTML content
         """
