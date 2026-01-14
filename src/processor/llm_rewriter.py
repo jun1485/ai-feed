@@ -218,188 +218,253 @@ class ContentProcessor:
             }
 
     def _get_korean_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """한국어 콘텐츠 생성 프롬프트"""
+        """한국어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전"""
         return f"""
-        당신은 SEO 전문가이자 바이럴 콘텐츠 작성자입니다.
-        다음 영어 기술 뉴스를 한국어 블로그 포스팅으로 재작성해주세요.
+        당신은 AI/테크 분야 전문 블로거이자 칼럼니스트입니다.
+        다음 기술 뉴스를 바탕으로 **독창적인 분석 기사**를 작성해주세요.
+        단순 번역이나 요약이 아닌, 당신만의 관점과 인사이트가 담긴 콘텐츠를 만들어야 합니다.
         
-        [원문 정보]
+        [참고 자료]
         제목: {raw_data['title']}
         내용: {raw_data['original_content']}
         출처: {raw_data['source']}
         링크: {raw_data['url']}
         
-        [SEO 최적화 핵심 전략]
+        ============================================
+        [핵심 원칙: 독창적 가치 제공]
+        ============================================
         
-        1. **제목 작성 (SEO + 클릭 유도 둘 다 필요!)**:
-           [필수] 제목에 반드시 핵심 검색 키워드를 포함!
-           
-           [키워드 우선 제목 패턴]:
-           - "[회사명] [제품명] [동작]" + 매력적 후킹
-           - 예: "ChatGPT 이미지 생성 기능 출시, 포토샵 대체할까?"
-           - 예: "구글 제미나이 2.0 발표, GPT-4 넘어섰나?"
-           - 예: "테슬라 로보택시 공개, 2025년 상용화 가능성은?"
-           - 예: "애플 AI 시리 업그레이드, 경쟁사 따라잡을 수 있을까?"
-           
-           [제목 작성 규칙]:
-           - 핵심 키워드(회사명, 제품명, 기술명)를 제목 맨 앞에 배치
-           - 30자 내외로 간결하게
-           - 뒤에 호기심 유발 문구 추가 (?, ... 활용)
-           - "충격!", "속보!" 같은 자극적인 표현 금지
-           
-        2. **메타 설명 (Meta Description) - 매우 중요!**:
-           - 150자 내외의 글 요약
+        이 글은 원문 뉴스를 "번역"하는 것이 아닙니다!
+        다음을 반드시 포함해야 합니다:
+        - 당신만의 해석과 분석
+        - 한국 독자에게 유용한 맥락 정보
+        - 실용적인 시사점과 활용 방안
+        - 관련 배경 지식 설명
+        
+        ============================================
+        [필수 콘텐츠 구조 - 반드시 이 순서로!]
+        ============================================
+        
+        1. **도입부 (2-3문단)**:
+           - 왜 이 뉴스가 중요한지 설명
+           - 독자가 왜 이 글을 읽어야 하는지 동기 부여
            - 핵심 키워드 자연스럽게 포함
-           - 클릭 유도하는 문장으로 작성
-           - 예: "구글이 발표한 제미나이 2.0의 새로운 기능과 GPT-4와의 비교 분석. AI 업계 판도가 바뀔 수 있는 이유를 알아봅니다."
         
-        3. **이미지 설명 (Alt Text)**:
-           - 단순히 "이미지"가 아닌 구체적인 설명
-           - 예: "ChatGPT 이미지 생성 기능 실제 사용 화면"
-           - 예: "구글 제미나이 2.0 발표 현장 사진"
-           - 핵심 키워드 포함
+        2. **<h2>📰 핵심 내용 정리</h2>**:
+           - 원문의 주요 사실을 정리
+           - 단순 번역 아님 - 맥락과 함께 설명
+           - 전문 용어는 쉽게 풀어서 설명
         
-        4. **본문 SEO 구조**:
-           - 첫 문단에 핵심 키워드 자연스럽게 포함
-           - <h2> 태그로 소제목 구성 (4-5개)
-           - 소제목에도 키워드 포함
-           - 본문 2000자 이상 작성 (매우 중요!)
-           - 마지막에 요약/결론 섹션 추가
+        3. **<h2>🔍 심층 분석: 왜 중요한가?</h2>**:
+           - 이 기술/발표가 갖는 의미 분석
+           - 업계 트렌드와의 연결성
+           - 경쟁사 동향과 비교
+           - 최소 4-5문단 이상 작성!
         
-        5. **[필수] 나의 분석 섹션 - 반드시 포함!**:
-           - 본문 중간 또는 끝에 "<h2>🔍 나의 분석</h2>" 섹션 필수!
-           - 이 섹션에는 다음 내용을 포함해야 함:
-             * 이 기술/뉴스가 한국 시장에 미칠 영향
-             * 개발자나 일반 사용자에게 주는 시사점
-             * 경쟁사 대비 장단점 분석
-             * 향후 전망이나 예상되는 변화
-           - 최소 3-4문장 이상의 실질적인 인사이트 제공
-           - 단순 사실 나열이 아닌 의견과 분석 필수
+        4. **<h2>🇰🇷 한국 시장에 미치는 영향</h2>**:
+           - 한국 사용자/기업에게 어떤 의미인지
+           - 국내 서비스 출시 가능성
+           - 한국 기업들의 대응 전망
+           - 이 섹션은 원문에 없는 독창적 분석!
         
-        6. **HTML 형식 규칙**:
-           - 반드시 HTML 태그만 사용!
-           - 마크다운 문법(**, ##, *, - 등) 절대 금지!
-           - 소제목: <h2> (절대 h3 이하 사용 금지, 첫 소제목은 h2 필수!)
-           - 문단: <p>
-           - 강조: <strong>
-           - 인용: <blockquote>
-           - 리스트: <ul>, <li>
-           - 링크: <a href="...">
-           - 글 마지막: "출처: <a href='{raw_data['url']}'>원문 보기</a>"
+        5. **<h2>💡 실용 가이드: 어떻게 활용할까?</h2>**:
+           - 일반 사용자가 얻을 수 있는 혜택
+           - 개발자/전문가가 주목할 포인트
+           - 당장 해볼 수 있는 것들
+           - 구체적인 활용 시나리오 제시
         
-        7. **[금지] 플레이스홀더 사용 절대 금지!**:
-           - [insert ...], [여기에 ...], [추가 필요] 같은 대괄호 플레이스홀더 절대 금지!
-           - 모든 문장은 완성된 형태로 작성
-           - 정보가 부족하면 일반적인 표현으로 대체
-           - 예: "[연도 추가]" (X) → "최근 몇 년간" (O)
+        6. **<h2>🔮 전망과 예측</h2>**:
+           - 향후 발전 방향 예측
+           - 주의해야 할 점이나 리스크
+           - 장기적 관점에서의 의미
         
-        8. **언어 규칙**:
-           - 반드시 한국어로만 작성
-           - 영어는 고유명사(회사명, 제품명, 인명)에만 허용
+        7. **<h2>📝 마치며</h2>**:
+           - 핵심 내용 요약 (3-4문장)
+           - 독자에게 생각할 거리 제공
+           - "출처: <a href='{raw_data['url']}'>원문 보기</a>"
         
-        9. **태그/라벨 생성**:
-           - 글 내용에 맞는 관련 태그 5개 생성
-           - 필수: "AI" 또는 관련 기술명
-           - 회사명, 제품명, 기술 용어 포함
+        ============================================
+        [SEO 최적화]
+        ============================================
         
-        [출력 형식 - 정확히 지킬 것!]
-        첫 줄: "TITLE: 제목"
-        둘째 줄: "META: 메타 설명 (150자 내외)"
-        셋째 줄: "ALT: 이미지 대체 텍스트"
-        넷째 줄: "TAGS: 태그1, 태그2, 태그3, 태그4, 태그5"
-        다섯째 줄부터: 본문 (HTML)
+        **제목**:
+        - 핵심 키워드(회사명, 제품명)를 맨 앞에 배치
+        - 30자 내외, 호기심 유발 문구 추가
+        - 예: "구글 제미나이 2.0, GPT-4와 뭐가 다를까? 심층 분석"
+        - "충격!", "속보!" 같은 자극적 표현 금지
+        
+        **메타 설명**:
+        - 150자 내외, 핵심 키워드 포함
+        - 이 글에서 얻을 수 있는 가치 명시
+        
+        **이미지 Alt Text**:
+        - 구체적인 설명 (예: "구글 제미나이 2.0 기능 비교 인포그래픽")
+        
+        ============================================
+        [품질 기준 - AdSense 승인용]
+        ============================================
+        
+        ✅ 필수 충족사항:
+        - 총 글자수 3000자 이상 (매우 중요!)
+        - 원문에 없는 독창적 분석 50% 이상
+        - 모든 섹션 충실히 작성
+        - 한국 독자 맞춤 정보 포함
+        - 실용적 가치 제공
+        
+        ❌ 금지사항:
+        - 단순 번역/요약
+        - [insert], [여기에] 등 플레이스홀더
+        - 마크다운 문법 (**, ##, - 등)
+        - 내용 없는 짧은 문단
+        - 반복적인 표현
+        
+        ============================================
+        [HTML 형식]
+        ============================================
+        - 소제목: <h2> (이모지 포함)
+        - 문단: <p>
+        - 강조: <strong>
+        - 인용: <blockquote>
+        - 리스트: <ul>, <li>
+        - 중요 박스: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0;">
+        
+        ============================================
+        [태그]
+        ============================================
+        - 5개 생성, "AI" 필수 포함
+        - 회사명, 제품명, 기술명 포함
+        
+        [출력 형식]
+        TITLE: 제목
+        META: 메타 설명
+        ALT: 이미지 대체 텍스트
+        TAGS: 태그1, 태그2, 태그3, 태그4, 태그5
+        (빈 줄)
+        본문 HTML
         """
 
     def _get_english_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """영어 콘텐츠 생성 프롬프트"""
+        """영어 콘텐츠 생성 프롬프트 - AdSense 최적화 버전"""
         return f"""
-        You are an SEO expert and viral content creator.
-        Rewrite the following tech news as an engaging English blog post.
+        You are a professional AI/Tech blogger and columnist.
+        Based on the following tech news, write an **original analysis article**.
+        This is NOT a rewrite or translation - you must provide YOUR unique perspective and insights.
         
-        [Source Information]
+        [Reference Material]
         Title: {raw_data['title']}
         Content: {raw_data['original_content']}
         Source: {raw_data['source']}
         Link: {raw_data['url']}
         
-        [SEO Optimization Strategy]
+        ============================================
+        [CORE PRINCIPLE: Provide Original Value]
+        ============================================
         
-        1. **Title (SEO + Click-worthy)**:
-           [Required] Include primary search keywords in the title!
-           
-           [Keyword-first Title Patterns]:
-           - "[Company] [Product] [Action]" + Engaging hook
-           - Example: "ChatGPT Image Generation Launches: Will It Replace Photoshop?"
-           - Example: "Google Gemini 2.0 Revealed: Has It Surpassed GPT-4?"
-           - Example: "Tesla Robotaxi Unveiled: What This Means for 2025"
-           - Example: "Apple AI Siri Upgrade: Can It Catch Up to Competitors?"
-           
-           [Title Rules]:
-           - Put core keywords (company, product, tech name) at the beginning
-           - Keep it under 60 characters
-           - Add curiosity-inducing phrases (?, ... )
-           - Avoid sensational words like "Shocking!", "Breaking!"
-           
-        2. **Meta Description - Very Important!**:
-           - 150-160 character summary
-           - Include keywords naturally
-           - Write click-inducing sentences
-           - Example: "Google's Gemini 2.0 brings new features that could reshape AI. We analyze how it compares to GPT-4 and what it means for the industry."
+        This article is NOT about "rewriting" the source news!
+        You MUST include:
+        - Your own interpretation and analysis
+        - Contextual information useful for readers
+        - Practical implications and use cases
+        - Background knowledge explanation
         
-        3. **Image Alt Text**:
-           - Specific, descriptive text (not just "image")
-           - Example: "ChatGPT image generation feature demo screen"
-           - Example: "Google Gemini 2.0 announcement event"
-           - Include keywords
+        ============================================
+        [REQUIRED CONTENT STRUCTURE - Follow This Order!]
+        ============================================
         
-        4. **Content SEO Structure**:
-           - Include keywords naturally in the first paragraph
-           - Use <h2> tags for subheadings (4-5 sections)
-           - Include keywords in subheadings
-           - Write at least 1000 words (VERY IMPORTANT!)
-           - Add a summary/conclusion section at the end
+        1. **Introduction (2-3 paragraphs)**:
+           - Explain why this news matters
+           - Motivate readers why they should read this
+           - Include core keywords naturally
         
-        5. **[REQUIRED] Editor's Take Section - MUST INCLUDE!**:
-           - Include "<h2>🔍 Editor's Take</h2>" section in the middle or end!
-           - This section MUST contain:
-             * Your analysis of why this matters for the industry
-             * Implications for developers and general users
-             * Comparison with competitors (pros and cons)
-             * Future predictions and expected changes
-           - Provide at least 3-4 sentences of genuine insight
-           - This is NOT a summary - it's YOUR unique perspective and analysis
+        2. **<h2>📰 Key Takeaways</h2>**:
+           - Summarize main facts from the source
+           - NOT a simple copy - explain with context
+           - Clarify technical terms for general readers
         
-        6. **HTML Format Rules**:
-           - Use ONLY HTML tags!
-           - NO Markdown syntax (**, ##, *, - etc.)!
-           - Subheadings: <h2> (no h3 or lower, first subheading must be h2!)
-           - Paragraphs: <p>
-           - Emphasis: <strong>
-           - Quotes: <blockquote>
-           - Lists: <ul>, <li>
-           - Links: <a href="...">
-           - End with: "Source: <a href='{raw_data['url']}'>Original Article</a>"
+        3. **<h2>🔍 Deep Dive: Why This Matters</h2>**:
+           - Analyze the significance of this tech/announcement
+           - Connect to industry trends
+           - Compare with competitor moves
+           - Write at least 4-5 paragraphs!
         
-        7. **[FORBIDDEN] NO Placeholder Text!**:
-           - NEVER use placeholders like [insert ...], [add here], [TBD]
-           - All sentences must be complete and final
-           - If information is missing, use general expressions instead
-           - Example: "[insert year]" (WRONG) → "in recent years" (CORRECT)
+        4. **<h2>🌍 Global Market Impact</h2>**:
+           - What this means for users and businesses globally
+           - Potential rollout timeline in different regions
+           - How existing players might respond
+           - This section should be YOUR original analysis!
         
-        8. **Language Rules**:
-           - Write entirely in English
-           - Use clear, professional tech journalism style
-           - Avoid jargon that general readers wouldn't understand
+        5. **<h2>💡 Practical Guide: How to Use This</h2>**:
+           - Benefits for regular users
+           - Key points for developers/professionals
+           - Things you can try right now
+           - Specific use case scenarios
         
-        9. **Tags/Labels**:
-           - Generate 5 relevant tags
-           - Required: "AI" or related tech name
-           - Include company names, product names, tech terms
+        6. **<h2>🔮 Future Outlook</h2>**:
+           - Predictions for future development
+           - Risks and considerations
+           - Long-term implications
         
-        [Output Format - Follow Exactly!]
-        Line 1: "TITLE: title here"
-        Line 2: "META: meta description (150-160 chars)"
-        Line 3: "ALT: image alt text"
-        Line 4: "TAGS: tag1, tag2, tag3, tag4, tag5"
-        Line 5 onwards: Body content (HTML)
+        7. **<h2>📝 Final Thoughts</h2>**:
+           - Summarize key points (3-4 sentences)
+           - Give readers something to think about
+           - "Source: <a href='{raw_data['url']}'>Original Article</a>"
+        
+        ============================================
+        [SEO OPTIMIZATION]
+        ============================================
+        
+        **Title**:
+        - Put core keywords (company, product) at the beginning
+        - Under 60 characters, add curiosity-inducing hook
+        - Example: "Google Gemini 2.0: How It Differs From GPT-4 - Deep Analysis"
+        - Avoid sensational words like "Shocking!", "Breaking!"
+        
+        **Meta Description**:
+        - 150-160 characters, include keywords
+        - Clearly state the value readers will get
+        
+        **Image Alt Text**:
+        - Specific description (e.g., "Google Gemini 2.0 feature comparison infographic")
+        
+        ============================================
+        [QUALITY STANDARDS - For AdSense Approval]
+        ============================================
+        
+        ✅ MUST HAVE:
+        - Total word count: 1500+ words (VERY IMPORTANT!)
+        - 50%+ original analysis not in source
+        - All sections thoroughly written
+        - Practical value for readers
+        - Professional journalism quality
+        
+        ❌ FORBIDDEN:
+        - Simple translation/summary
+        - Placeholders like [insert], [add here], [TBD]
+        - Markdown syntax (**, ##, - etc.)
+        - Short, empty paragraphs
+        - Repetitive expressions
+        
+        ============================================
+        [HTML FORMAT]
+        ============================================
+        - Subheadings: <h2> (with emoji)
+        - Paragraphs: <p>
+        - Emphasis: <strong>
+        - Quotes: <blockquote>
+        - Lists: <ul>, <li>
+        - Highlight box: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0;">
+        
+        ============================================
+        [TAGS]
+        ============================================
+        - Generate 5 tags, "AI" is required
+        - Include company names, product names, tech terms
+        
+        [OUTPUT FORMAT]
+        TITLE: title here
+        META: meta description
+        ALT: image alt text
+        TAGS: tag1, tag2, tag3, tag4, tag5
+        (blank line)
+        Body HTML content
         """
