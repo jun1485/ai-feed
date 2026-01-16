@@ -128,21 +128,23 @@ class ContentProcessor:
             content_start_idx = 0
             
             for i, line in enumerate(lines):
-                stripped = line.strip()
-                if stripped.startswith("TITLE:"):
-                    title = stripped.replace("TITLE:", "").strip()
+                # 마크다운/특수문자 제거 후 정규화 (파싱 정확도 향상)
+                clean_line = line.strip().lstrip("*#-").strip()
+                
+                if clean_line.upper().startswith("TITLE:") or clean_line.startswith("제목:"):
+                    title = clean_line.split(":", 1)[1].strip()
                     content_start_idx = i + 1
-                elif stripped.startswith("META:"):
-                    meta_description = stripped.replace("META:", "").strip()
+                elif clean_line.upper().startswith("META:") or clean_line.startswith("메타:") or clean_line.startswith("메타 설명:"):
+                    meta_description = clean_line.split(":", 1)[1].strip()
                     content_start_idx = i + 1
-                elif stripped.startswith("ALT:"):
-                    alt_text = stripped.replace("ALT:", "").strip()
+                elif clean_line.upper().startswith("ALT:") or clean_line.startswith("이미지") or clean_line.startswith("ALT 텍스트:"):
+                    alt_text = clean_line.split(":", 1)[1].strip()
                     content_start_idx = i + 1
-                elif stripped.startswith("TAGS:"):
-                    tags_str = stripped.replace("TAGS:", "").strip()
+                elif clean_line.upper().startswith("TAGS:") or clean_line.startswith("태그:") or clean_line.startswith("키워드:"):
+                    tags_str = clean_line.split(":", 1)[1].strip()
                     tags = [tag.strip() for tag in tags_str.split(",") if tag.strip()]
                     content_start_idx = i + 1
-                elif stripped and not any(stripped.startswith(p) for p in ["TITLE:", "META:", "ALT:", "TAGS:"]):
+                elif clean_line and not any(clean_line.upper().startswith(p) for p in ["TITLE:", "META:", "ALT:", "TAGS:", "제목:", "메타:", "태그:", "이미지", "키워드"]):
                     # 본문 시작
                     content = "\n".join(lines[i:]).strip()
                     # ```html 코드블록 제거
@@ -378,19 +380,8 @@ class ContentProcessor:
         - "~에 대해 알아보겠습니다" 같은 AI 투 표현
         
         ============================================
-        🏷️ [HTML 형식]
-        ============================================
-        - 소제목: <h2> (이모지 포함)
-        - 문단: <p>
-        - 강조: <strong>
-        - 인용: <blockquote>
-        - 리스트: <ul>, <li>
-        - 테이블: HTML table 태그
-        - 중요 박스: <div style="background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #4285f4;">
-        - 경고 박스: <div style="background:#fff3cd; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
-        
-        ============================================
-        [출력 형식]
+        [출력 형식 - 중요]
+        * 반드시 아래 키워드를 유지하세요 (번역하지 마세요)
         ============================================
         TITLE: 제목
         META: 메타 설명
