@@ -59,23 +59,23 @@ def main():
                         "language": "ko"
                     })
                 
-                # 영어 버전 발행
-                print(f"  🇺🇸 English version...")
-                processed_en = processor.process_content(item, language="en")
-                
-                if processed_en.get("meta_description"):
-                    print(f"  📋 Meta (EN): {processed_en['meta_description'][:50]}...")
-                
-                link_en = publisher.post_article(processed_en, is_draft=False)
-                print(f"  ✅ EN Result: {link_en}")
-                
-                if link_en and not link_en.startswith("Error") and not link_en.startswith("Skipped"):
-                    processor.add_recent_post(processed_en["title"], link_en)
-                    published_posts.append({
-                        "title": processed_en["title"],
-                        "url": link_en,
-                        "language": "en"
-                    })
+                # 영어 버전 발행 (에드센스 승인 전까지 비활성화 - 단일 언어 품질 집중)
+                # print(f"  🇺🇸 English version...")
+                # processed_en = processor.process_content(item, language="en")
+                #
+                # if processed_en.get("meta_description"):
+                #     print(f"  📋 Meta (EN): {processed_en['meta_description'][:50]}...")
+                #
+                # link_en = publisher.post_article(processed_en, is_draft=False)
+                # print(f"  ✅ EN Result: {link_en}")
+                #
+                # if link_en and not link_en.startswith("Error") and not link_en.startswith("Skipped"):
+                #     processor.add_recent_post(processed_en["title"], link_en)
+                #     published_posts.append({
+                #         "title": processed_en["title"],
+                #         "url": link_en,
+                #         "language": "en"
+                #     })
                     
         except Exception as e:
             print(f"❌ Error with {type(crawler).__name__}: {e}")
