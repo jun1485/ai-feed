@@ -299,24 +299,44 @@ class ContentProcessor:
      "결론적으로", "주목할 만하다", "눈여겨볼 만하다", "귀추가 주목된다"
    - 이모지 사용 금지.
 
-6. 개발자답게 솔직한 의견:
+6. 가독성 (매우 중요):
+   - <p> 하나에 최대 2~3문장. 4문장 이상 절대 금지.
+   - 핵심 주장이나 감탄은 한 문장만 단독 <p>로 빼: <p>이건 진짜 게임 체인저다.</p>
+   - 긴 설명이 이어질 때는 <ul>/<ol> 리스트로 끊어줘.
+   - 인용이나 핵심 수치는 <blockquote>로 강조.
+   - 소제목(<h2>) 바로 아래 첫 <p>는 2문장 이내로 짧게 시작.
+   - 한 섹션 안에서 <p>만 5개 이상 연속되면 중간에 <blockquote>, <ul>, <strong> 등으로 시각적 변화를 줘.
+   - 숫자/비교 데이터가 3개 이상이면 반드시 <table>이나 <ul>로 정리.
+
+7. 개발자답게 솔직한 의견:
    - "이거 써보니까 진짜 편하더라", "근데 이건 좀 아쉽다", "과대평가된 감이 있다"
    - 기술의 장단점에 대해 확실한 입장을 취해. 양비론 금지.
    - 가능하면 개발 경험과 연결해서 써. "프로젝트에서 이런 걸 쓴다면..."
 
-7. 한국 상황은 글 흐름 속에 자연스럽게:
+8. 한국 상황은 글 흐름 속에 자연스럽게:
    - 별도 섹션 만들지 마. "국내에서는", "우리나라 개발자들 사이에서는" 같은 식으로 녹여.
 
-8. 마무리는 가볍지만 생각할 거리를 남겨:
+9. 마무리는 가볍지만 생각할 거리를 남겨:
    - "여러분은 어떻게 생각하세요?" 같은 뻔한 마무리 대신,
      하나의 예측이나 개발자로서의 다짐 같은 걸로 끝내.
    - 출처 넣어: 출처: <a href="{raw_data['url']}">원문 기사</a>
 
-9. 분량: 5000자 이상. 각 소제목 아래 3문단 이상.
+10. 분량: 5000자 이상. 각 소제목 아래 3문단 이상.
 
 [HTML 형식]
 <h2>, <p>, <strong>, <ul>, <ol>, <li>, <blockquote>, <table> 사용.
 인라인 스타일 금지. 마크다운 문법 금지.
+
+구조 예시 (이 패턴을 따라):
+<p>짧은 도입 1~2문장.</p>
+<p>부연 설명 2~3문장.</p>
+<p>한 줄 강조 문장.</p>
+<blockquote>핵심 수치나 인용</blockquote>
+<ul>
+<li>비교 항목 1</li>
+<li>비교 항목 2</li>
+</ul>
+<p>분석 2~3문장.</p>
 
 [출력 형식]
 TITLE: 한국어 제목 (영어 원문 그대로 쓰지 마. 한국어로 새로 작성)
@@ -380,18 +400,38 @@ Link: {raw_data['url']}
      "It remains to be seen", "Only time will tell", "game-changer"
    - No emojis.
 
-5. Take a clear stance. Don't hedge everything.
+5. Readability (VERY IMPORTANT):
+   - Max 2-3 sentences per <p>. Never 4+ sentences in one <p>.
+   - Pull out key claims or reactions as standalone single-sentence <p> tags.
+   - When listing 3+ items, use <ul>/<ol> instead of prose.
+   - Use <blockquote> for key stats, quotes, or standout numbers.
+   - First <p> after each <h2> should be short (1-2 sentences).
+   - If 5+ <p> tags appear in a row, break the pattern with <blockquote>, <ul>, or <strong>.
+   - Use <table> for any comparison of 3+ data points.
+
+6. Take a clear stance. Don't hedge everything.
    Say things like: "Honestly, this is underwhelming", "I think they're onto something",
    "This feels overhyped."
 
-6. End with a thought-provoking prediction or question. Not "What do you think?"
+7. End with a thought-provoking prediction or question. Not "What do you think?"
    Something specific. Then add: Source: <a href="{raw_data['url']}">Original Article</a>
 
-7. Length: 2000+ words. At least 3 paragraphs per section.
+8. Length: 2000+ words. At least 3 paragraphs per section.
 
 [HTML Format]
 <h2>, <p>, <strong>, <ul>, <ol>, <li>, <blockquote>, <table>.
 No inline styles. No markdown.
+
+Structure example (follow this pattern):
+<p>Short intro, 1-2 sentences.</p>
+<p>Elaboration, 2-3 sentences.</p>
+<p>One-line emphasis.</p>
+<blockquote>Key stat or quote</blockquote>
+<ul>
+<li>Comparison item 1</li>
+<li>Comparison item 2</li>
+</ul>
+<p>Analysis, 2-3 sentences.</p>
 
 [Output Format]
 TITLE: SEO title (under 60 chars)
