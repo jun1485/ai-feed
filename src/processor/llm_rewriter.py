@@ -1,5 +1,6 @@
 import os
 import re
+import random
 from google import genai
 from typing import Dict, Any, List
 from .image_generator import ImageGenerator
@@ -57,6 +58,16 @@ class ContentProcessor:
 
     def _validate_content(self, content: str) -> str:
         """플레이스홀더 및 저품질 패턴 감지/제거"""
+        # 프롬프트 라벨 텍스트 제거 (LLM이 출력 형식 안내문을 본문에 포함하는 경우)
+        label_patterns = [
+            r'본문\s*HTML[^\n<]*',
+            r'Body\s*HTML[^\n<]*',
+        ]
+        for pattern in label_patterns:
+            if re.search(pattern, content, re.IGNORECASE):
+                print(f"[경고] 프롬프트 라벨 텍스트 발견 및 제거: {pattern}")
+                content = re.sub(pattern, '', content, flags=re.IGNORECASE)
+
         # AI 플레이스홀더 패턴 감지 (대괄호 안에 지시문이 있는 경우)
         placeholder_patterns = [
             r'\[insert[^\]]*\]',           # [insert ...]
@@ -70,20 +81,21 @@ class ContentProcessor:
             r'\[[^\]]*required[^\]]*\]',   # [...required...]
             r'\[[^\]]*todo[^\]]*\]',       # [...todo...]
         ]
-        
+
         found_placeholders = []
         for pattern in placeholder_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
             found_placeholders.extend(matches)
-        
+
         if found_placeholders:
             print(f"[경고] 플레이스홀더 발견 및 제거: {found_placeholders}")
             for pattern in placeholder_patterns:
                 content = re.sub(pattern, '', content, flags=re.IGNORECASE)
-            # 연속된 공백 정리
-            content = re.sub(r'\s{2,}', ' ', content)
-            content = re.sub(r'\s+([.,;:])', r'\1', content)
-        
+
+        # 연속된 공백/빈 줄 정리
+        content = re.sub(r'\n{3,}', '\n\n', content)
+        content = re.sub(r'\s+([.,;:])', r'\1', content)
+
         return content
 
     def process_content(self, raw_data: Dict[str, Any], language: str = "ko") -> Dict[str, Any]:
@@ -231,125 +243,160 @@ class ContentProcessor:
             }
 
     def _get_korean_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """한국어 콘텐츠 생성 프롬프트 - AdSense 승인 최적화 v3"""
-        return f"""당신은 AI/테크 전문 칼럼니스트입니다. 아래 참고 자료를 바탕으로,
-독자에게 실질적 가치를 제공하는 심층 분석 칼럼을 작성하세요.
+        """한국어 콘텐츠 생성 프롬프트 - 사람 글쓰기 스타일 v4"""
+        # 매 글마다 다른 오프닝/전환으로 패턴 깨기
+        openers = [
+            "오늘 이 소식 보고 좀 흥분했다. 개발자로서 이건 그냥 넘길 수가 없었다.",
+            "출근길에 이 기사 보고 회사 도착하자마자 동료한테 슬랙 보냈다.",
+            "솔직히 처음엔 '또 이런 뉴스야?' 했는데, 읽다 보니 생각이 완전 바뀌었다.",
+            "어제 야근하면서 이 소식 접했는데, 피곤한 것도 잊고 한참 읽었다.",
+            "개발자 커뮤니티에서 이 얘기가 엄청 돌고 있길래 원문을 찾아봤다.",
+            "이번 주에 본 테크 뉴스 중에 이게 단연 가장 흥미로웠다.",
+        ]
+        transitions = [
+            "근데 여기서 개발자로서 한 가지 짚고 넘어갈 게 있다.",
+            "사실 더 중요한 건 따로 있다고 본다.",
+            "근데 이걸 실제로 쓰는 입장에서 생각해보면 얘기가 좀 달라진다.",
+            "여기서 좀 다른 각도로 생각해보자.",
+            "잠깐, 이 부분은 현업 개발자 입장에서 좀 더 파볼 필요가 있다.",
+        ]
+        opener = random.choice(openers)
+        transition = random.choice(transitions)
+        section_count = random.randint(3, 5)
 
-[참고 자료]
+        return f"""아래 기사를 참고해서, 네 블로그에 올릴 글을 써줘.
+
+[너는 누구인가]
+현직 프론트엔드 개발자. React, Vue 등을 매일 다루고, 새로운 기술이 나오면 직접 써보는 걸 좋아한다.
+블로그는 편하게 쓴다. 친구한테 카톡으로 설명해주듯이, 쉽고 재밌게.
+독자는 개발 입문자부터 주니어 개발자, IT에 관심 있는 일반인까지 다양하다.
+
+[참고 기사]
 제목: {raw_data['title']}
 내용: {raw_data['original_content']}
 출처: {raw_data['source']}
 링크: {raw_data['url']}
 
-===== 작성 원칙 =====
+[글쓰기 규칙]
 
-1. 독창적 분석 중심:
-   - 원문을 단순 번역/요약하지 마세요. 원문은 사실 확인 용도로만 참고하세요.
-   - 글의 70% 이상은 원문에 없는 독자적 분석, 맥락, 비교, 전망이어야 합니다.
-   - 이 기술/발표가 업계 전체에 미치는 파급효과를 다각도로 분석하세요.
-   - 경쟁 제품/서비스와의 구체적 비교를 포함하세요.
-   - 한국 시장과 사용자 관점에서의 의미를 반드시 다루세요.
+1. 첫 문단은 이렇게 시작해: "{opener}" 이 문장으로 시작하되, 자연스럽게 이어서 써.
 
-2. 전문가 칼럼 톤:
-   - 경험 기반 서술: "실제로 사용해보면...", "업계에서는..."
-   - 구체적 수치와 사례를 들어 논점을 뒷받침하세요.
-   - 장점뿐 아니라 한계와 우려도 균형있게 다루세요.
-   - 불확실한 사항은 "~로 보입니다", "~가능성이 높습니다"로 표현하세요.
+2. 원문을 번역하거나 요약하지 마. 참고만 하고, 네 관점으로 완전히 새로운 글을 써.
+   원문에 나온 사실은 활용하되, 분석/의견/맥락은 전부 네가 만들어.
 
-3. 자연스러운 글쓰기:
-   - 사람이 쓴 칼럼처럼 자연스럽게 작성하세요.
-   - 문장 길이와 구조를 다양하게 섞으세요.
-   - 중간중간 독자에게 질문을 던지세요.
-   - "~에 대해 알아보겠습니다", "결론적으로" 같은 기계적 표현을 쓰지 마세요.
-   - 이모지를 사용하지 마세요.
+3. 글 중간에 이 전환 문장을 한 번 써: "{transition}"
 
-4. 글 구조:
-   - 고정된 템플릿을 따르지 마세요. 주제에 맞게 자유롭게 구성하세요.
-   - h2 소제목 4-6개를 사용하되, 소제목은 주제에 맞는 구체적 문구를 쓰세요.
-   - 예시: "OpenAI와의 격차는 좁혀지고 있는가" (O) / "심층 분석" (X, 너무 포괄적)
-   - 글 마지막에 "출처: <a href='{raw_data['url']}'>원문 기사</a>"를 포함하세요.
+4. 소제목은 {section_count}개만 써. 소제목은 그 섹션의 핵심 논점을 담은 구체적 문장으로.
+   나쁜 예: "핵심 분석", "앞으로의 전망"
+   좋은 예: "엔비디아가 이 시점에 1000억 달러를 베팅하는 이유", "한국 AI 스타트업에 미칠 영향"
 
-5. 분량:
-   - 최소 5000자 이상 작성하세요.
-   - 각 소제목 섹션마다 3문단 이상 작성하세요.
+5. 톤은 친구한테 설명해주는 느낌으로:
+   - "~하거든요", "~더라고요", "~인 거죠", "~잖아요" 같은 구어체를 자연스럽게 써.
+   - 짧은 문장, 긴 문장 섞어. 가끔 한 줄짜리 문단도 OK. "이건 진짜 대박이다."
+   - "~것이다", "~된다", "~있다"로 끝나는 문장이 3번 연속 오면 안 됨.
+   - 같은 단어를 한 문단 안에서 반복하지 마.
+   - 이런 표현 절대 쓰지 마: "~에 대해 알아보겠습니다", "~라고 할 수 있습니다",
+     "결론적으로", "주목할 만하다", "눈여겨볼 만하다", "귀추가 주목된다"
+   - 이모지 사용 금지.
 
-===== HTML 형식 =====
-- 소제목: <h2>
-- 문단: <p>
-- 강조: <strong>
-- 목록: <ul>, <ol>, <li>
-- 인용: <blockquote>
-- 비교표: <table>, <tr>, <th>, <td>
-- 인라인 스타일을 사용하지 마세요.
+6. 개발자답게 솔직한 의견:
+   - "이거 써보니까 진짜 편하더라", "근데 이건 좀 아쉽다", "과대평가된 감이 있다"
+   - 기술의 장단점에 대해 확실한 입장을 취해. 양비론 금지.
+   - 가능하면 개발 경험과 연결해서 써. "프로젝트에서 이런 걸 쓴다면..."
 
-===== 출력 형식 (반드시 준수) =====
-- 제목, 메타 설명, 태그, 본문 모두 반드시 한국어로 작성하세요.
-- 영어 원문 제목을 그대로 사용하지 마세요. 한국어로 새로 작성하세요.
+7. 한국 상황은 글 흐름 속에 자연스럽게:
+   - 별도 섹션 만들지 마. "국내에서는", "우리나라 개발자들 사이에서는" 같은 식으로 녹여.
 
-TITLE: 한국어 SEO 제목 (핵심 키워드 앞 배치, 25-40자, 반드시 한국어)
-META: 한국어 메타 설명 (이 글의 핵심 가치 요약, 130-160자)
-ALT: 대표 이미지 설명 (구체적, 한국어, 15-25자)
-TAGS: 한국어태그1, 한국어태그2, 한국어태그3, 한국어태그4, 한국어태그5
+8. 마무리는 가볍지만 생각할 거리를 남겨:
+   - "여러분은 어떻게 생각하세요?" 같은 뻔한 마무리 대신,
+     하나의 예측이나 개발자로서의 다짐 같은 걸로 끝내.
+   - 출처 넣어: 출처: <a href="{raw_data['url']}">원문 기사</a>
 
-본문 HTML (반드시 한국어)"""
+9. 분량: 5000자 이상. 각 소제목 아래 3문단 이상.
+
+[HTML 형식]
+<h2>, <p>, <strong>, <ul>, <ol>, <li>, <blockquote>, <table> 사용.
+인라인 스타일 금지. 마크다운 문법 금지.
+
+[출력 형식]
+TITLE: 한국어 제목 (영어 원문 그대로 쓰지 마. 한국어로 새로 작성)
+META: 한국어 메타 설명 (130-160자)
+ALT: 이미지 설명 (한국어, 15-25자)
+TAGS: 태그1, 태그2, 태그3, 태그4, 태그5
+
+이 4줄 다음 빈 줄 후 바로 <p>로 본문 시작. 라벨 텍스트 출력 금지."""
 
     def _get_english_prompt(self, raw_data: Dict[str, Any]) -> str:
-        """영어 콘텐츠 생성 프롬프트 - AdSense 승인 최적화 v3"""
-        return f"""You are an AI/tech columnist. Based on the reference material below,
-write an in-depth analysis column that provides real value to readers.
+        """영어 콘텐츠 생성 프롬프트 - 사람 글쓰기 스타일 v4"""
+        personas = [
+            "A former software engineer turned tech blogger. You know the real challenges of building things.",
+            "An ex-startup founder who now writes about tech. You see technology through a business lens.",
+            "A tech journalist with 10 years of experience. You dig into the context behind every headline.",
+            "A CS professor who started blogging to make tech accessible. You explain the why, not just the what.",
+            "A product manager turned tech writer. You think about how technology actually ships and scales.",
+        ]
+        openers = [
+            "I've been chewing on this one for a while now.",
+            "When this news dropped, my first thought was: finally.",
+            "I almost scrolled past this story. Glad I didn't.",
+            "A friend in the industry pinged me about this, and honestly, I was skeptical at first.",
+            "This one caught me off guard. And I don't say that often.",
+            "I read this piece over my morning coffee and had to set the cup down halfway through.",
+        ]
+        persona = random.choice(personas)
+        opener = random.choice(openers)
+        section_count = random.randint(3, 5)
 
-[Reference Material]
+        return f"""Write a blog post based on the article below.
+
+[Your Profile]
+{persona}
+Your readers are tech-curious professionals, not necessarily engineers.
+
+[Source Article]
 Title: {raw_data['title']}
 Content: {raw_data['original_content']}
 Source: {raw_data['source']}
 Link: {raw_data['url']}
 
-===== Writing Principles =====
+[Writing Rules]
 
-1. Original Analysis First:
-   - Do NOT simply summarize or rewrite the source. Use it only for fact-checking.
-   - At least 70% of the article must be your own analysis, context, comparisons, and outlook.
-   - Analyze the broader industry impact from multiple angles.
-   - Include specific comparisons with competing products/services.
-   - Discuss implications for different user groups (developers, businesses, consumers).
+1. Start your first paragraph with: "{opener}" Then continue naturally.
 
-2. Expert Columnist Tone:
-   - Write from experience: "In practice...", "What the industry is seeing..."
-   - Support arguments with concrete numbers and examples.
-   - Cover both strengths and limitations in a balanced way.
-   - For uncertain matters, use "It appears that...", "This likely means..."
+2. Do NOT summarize or rewrite the source. Use it as a factual reference only.
+   All analysis, opinions, and context must be your own.
 
-3. Natural Writing:
-   - Write like a human columnist, not an AI.
-   - Vary sentence length and structure.
-   - Ask readers questions throughout the piece.
-   - NEVER use: "In this article, we will explore...", "In conclusion",
-     "It is important to note", "Let's dive in", "Without further ado"
-   - Do NOT use emojis.
+3. Use exactly {section_count} subheadings. Each must be a specific argument or question.
+   Bad: "Key Analysis", "Future Outlook"
+   Good: "Why Nvidia Is Betting $100B Right Now", "The Real Threat to OpenAI's Moat"
 
-4. Article Structure:
-   - Do NOT follow a rigid template. Structure the article naturally for the topic.
-   - Use 4-6 h2 subheadings with specific, descriptive phrases.
-   - Good: "Can Google Close the Gap with OpenAI?" / Bad: "Deep Analysis"
-   - End with: "Source: <a href='{raw_data['url']}'>Original Article</a>"
+4. Writing style rules (CRITICAL):
+   - Mix short sentences with longer ones. Create rhythm.
+   - Use one-sentence paragraphs occasionally. "That's a big deal."
+   - Never have 3+ sentences in a row ending with the same structure.
+   - Don't repeat the same word within a paragraph.
+   - BANNED phrases: "In this article", "It is important to note",
+     "Let's dive in", "Without further ado", "In conclusion",
+     "It remains to be seen", "Only time will tell", "game-changer"
+   - No emojis.
 
-5. Length:
-   - Minimum 2000 words.
-   - Each section under a subheading should have at least 3 paragraphs.
+5. Take a clear stance. Don't hedge everything.
+   Say things like: "Honestly, this is underwhelming", "I think they're onto something",
+   "This feels overhyped."
 
-===== HTML Format =====
-- Subheadings: <h2>
-- Paragraphs: <p>
-- Emphasis: <strong>
-- Lists: <ul>, <ol>, <li>
-- Quotes: <blockquote>
-- Comparison tables: <table>, <tr>, <th>, <td>
-- Do NOT use inline styles.
+6. End with a thought-provoking prediction or question. Not "What do you think?"
+   Something specific. Then add: Source: <a href="{raw_data['url']}">Original Article</a>
 
-===== Output Format =====
-TITLE: SEO-optimized title (core keyword first, under 60 chars)
-META: Meta description (key value of this article, 130-160 chars)
-ALT: Featured image description (specific, 5-10 words)
+7. Length: 2000+ words. At least 3 paragraphs per section.
+
+[HTML Format]
+<h2>, <p>, <strong>, <ul>, <ol>, <li>, <blockquote>, <table>.
+No inline styles. No markdown.
+
+[Output Format]
+TITLE: SEO title (under 60 chars)
+META: Meta description (130-160 chars)
+ALT: Image description (5-10 words)
 TAGS: tag1, tag2, tag3, tag4, tag5
 
-Body HTML content"""
+After these 4 lines and a blank line, start body with <p>. No labels."""

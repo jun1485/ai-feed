@@ -2,24 +2,24 @@ name: AI Feed Automation
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # 4시간마다 실행 (하루 4번)
+    - cron: '0 */8 * * *'  # 8시간마다 실행 (하루 3회: 00시, 08시, 16시 UTC)
   workflow_dispatch:
 
 jobs:
   run-feed:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Install dependencies
       run: pip install -r requirements.txt
     - name: Run Automation
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+        UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
         BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
         BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
